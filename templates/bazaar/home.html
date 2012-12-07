@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %} Home{% endblock %}
+{% block extra_js %}
+<script>
+	var counter = 1
+	function add() {
+		var element = document.createElement('select');
+		element.name = 'filter' + counter;
+		{% for skill in skills %}
+			var skill{{ skill.typeID }} = document.createElement('option');
+			skill{{ skill.typeID }}.value = '{{ skill.typeID }}';
+			skill{{ skill.typeID }}.innerHTML = '{{ skill.name }}';
+			element.appendChild(skill{{ skill.typeID }});
+		{% endfor %}
+		document.forms.filters.appendChild(element);
+		var level = document.createElement('select');
+		level.name = 'level' + counter;
+		var one = document.createElement('option');
+		one.value = '1';
+		one.innerHTML = 'I';
+		level.appendChild(one)
+		var two = document.createElement('option');
+		two.value = '2';
+		two.innerHTML = 'II';
+		level.appendChild(two);
+		var three = document.createElement('option');
+		three.value = '3';
+		three.innerHTML = 'III';
+		level.appendChild(three);
+		var four = document.createElement('option');
+		four.value = '4';
+		four.innerHTML = 'IV';
+		level.appendChild(four);
+		var five = document.createElement('option');
+		five.value = '5';
+		five.innerHTML = 'V';
+		level.appendChild(five);
+		document.forms.filters.appendChild(level);
+		document.forms.filters.appendChild(document.createElement('br'))
+		counter++;
+
+	}
+
+ </script>
+ {% endblock %}
+{% block content %}
+
+	 <button onclick='add()'>Add Filter</button>
+	 <form name='filters' method='post'>
+	 	{% csrf_token %}
+	 	<input type='submit' value='Search'/><br>
+	 </form>
+
+	{% for thread in threads %}
+    <div>
+        <div>
+            EVE-O Thread:<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>&nbsp&nbsp
+        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}">EVEBoard</a>
+        </div> 
+    </div>
+    {% endfor %}
+ {% endblock %}
