@@ -120,10 +120,13 @@ def scrape_thread(thread):
     first_post = thread_soup.findAll('div',attrs={ 'id':'forum_ctl00_MessageList_ctl00_DisplayPost1_MessagePost1' })[0]
     eveboard_links = first_post.findAll('a')
     if eveboard_links:
-        #just grab the first eveboard link for now
-        #handle multiple characters in one thread later...
-        pilot_name = re.search(R_PILOT_NAME,eveboard_links[0]['href']).group(1)
-        return pilot_name
+        for link in eveboard_links:
+            if link:
+                #just grab the first eveboard link for now
+                #handle multiple characters in one thread later...                
+                pilot_name = re.search(R_PILOT_NAME,eveboard_links[0]['href'])
+                if pilot_name:
+                    return pilot_name.group(1)
     else:
         return None
 
