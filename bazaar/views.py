@@ -16,7 +16,7 @@ def index(request):
         filterset =  getFilters(request.POST)
         results = Character.objects.all()
         for f in filterset.values():
-            results = results.filter(skills__skill__typeID=f['typeid'],skills__level=f['level'])
+            results = results.filter(skills__skill__typeID=f['typeid'],skills__level__gte=f['level'])
         if len(results) > 0:
             for result in results:
                 thread = Thread.objects.filter(character=result)[0]
