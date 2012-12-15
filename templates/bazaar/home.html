@@ -11,8 +11,7 @@
 			skill{{ skill.typeID }}.value = '{{ skill.typeID }}';
 			skill{{ skill.typeID }}.innerHTML = '{{ skill.name }}';
 			element.appendChild(skill{{ skill.typeID }});
-		{% endfor %}
-		document.forms.filters.appendChild(element);
+		{% endfor %}		
 		var level = document.createElement('select');
 		level.name = 'level' + counter;
 		var one = document.createElement('option');
@@ -35,8 +34,10 @@
 		five.value = '5';
 		five.innerHTML = 'V';
 		level.appendChild(five);
-		document.forms.filters.appendChild(level);
-		document.forms.filters.appendChild(document.createElement('br'))
+		document.forms.filters.insertBefore(document.createElement('br'),document.forms.filters.firstChild)
+		document.forms.filters.insertBefore(level,document.forms.filters.firstChild);
+		document.forms.filters.insertBefore(element,document.forms.filters.firstChild);
+		
 		counter++;
 
 	}
@@ -44,24 +45,40 @@
  </script>
  {% endblock %}
 {% block content %}
-	<h1>Eve Character Search Alpha 0.00000001</h1>
-	 <button onclick='add()'>Add Filter</button>
-	 <form name='filters' method='post'>
+	<h1 class='center'>Eve Character Search Alpha 0.00000002</h1>
+	 <div class='center'><button onclick='add()'>Add Filter</button></div>
+	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
 	 	<input type='submit' value='Search'/><br>
 	 </form>
-
-	{% for thread in threads %}
-    <div>
-        <div>
-            EVE-O Thread:<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>&nbsp&nbsp
-        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}">EVEBoard</a>
-        </div> 
-    </div>
-    {% endfor %}
-    <div>This app scrapes the eve-o forum character bazaar and builds a database of currently active sales</div>
-    <div>You add filters then hit search to find the character with the skills you want</div>
-    <div>Currently It wont scrape passworded sales</div>
-    <div>At the moment it searchs for the skills you put in or greater than</div>
-    <div>Contact twistfrog on jabber if you have anything to say</div>
+	{% if threads %}
+			<table class='center'>
+				<tr>
+					<th scope="col">Thread</th>
+					<th scope="col">Eveboard Link</th>
+				<tr>
+				{% for thread in threads %}
+				    <tr>
+				    	<td>
+				    		<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
+				    	</td>
+				    	<td align='center'>
+				        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{{ STATIC_URL }}images/eveboard.jpg" alt='Eveboard link'/></a>
+				        </td>
+				    </tr>
+			    {% endfor %}
+		    </table>
+	{% endif %}
+	</br>
+	</br>
+	<div class='center'>
+		<h2> Notes </h2>
+		<ul style='text-align:left'>
+		    <li>This app scrapes the eve-o forum character bazaar and builds a database of currently active sales</li>
+		    <li>You add filters then hit search to find the character with the skills you want</li>
+		    <li>Currently It wont scrape passworded sales</li>
+		    <li>At the moment it searchs for the skills you put in or greater than</li>
+		    <li>Contact twistfrog on jabber if you have anything to say</li>
+		</ul>
+	</div>
  {% endblock %}
