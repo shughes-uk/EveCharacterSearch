@@ -2,16 +2,100 @@
 {% block title %} Home{% endblock %}
 {% block extra_js %}
 <script>
+	var skillList = {{ js_skills|safe }}
 	var counter = 1
+	function delself(){
+		parentNode.parentNode.removeChild(parentNode)
+	}
+	function makeSkillSelectElement(typeID,name,selected)	{
+		var skillEle = document.createElement('option');
+		skillEle.value = typeID;
+		skillEle.innerHTML = name;
+		if (selected)
+		{
+			skillEle.selected = true;
+		}
+		return skillEle;
+	}
+	function start() {
+		{% for filter in filters %}
+			var div = document.createElement('div');
+			var element = document.createElement('select');
+			element.name = 'filter' + counter;
+			for (var i = 0; i < skillList.length; i++) 
+			{    			
+				if ( skillList[i]['fields']['typeID'] == {{ filter.typeid }} )
+				{
+					element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , true) );
+				}
+				else
+				{
+					element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , false) );
+				}
+			}
+			var level = document.createElement('select');
+			level.name = 'level' + counter;
+			var one = document.createElement('option');
+			one.value = '1';
+			one.innerHTML = 'I';
+			if ({{ filter.level }} == 1)
+			{
+				one.selected = true
+			}
+			level.appendChild(one)
+			var two = document.createElement('option');
+			two.value = '2';
+			two.innerHTML = 'II';
+			if ({{ filter.level }} == 2)
+			{
+				two.selected = true
+			}
+			level.appendChild(two);
+			var three = document.createElement('option');
+			three.value = '3';
+			three.innerHTML = 'III';
+			if ({{ filter.level }} == 3)
+			{
+				three.selected = true
+			}
+			level.appendChild(three);
+			var four = document.createElement('option');
+			four.value = '4';
+			four.innerHTML = 'IV';
+			if ({{ filter.level }} == 4)
+			{
+				four.selected = true
+			}
+			level.appendChild(four);
+			var five = document.createElement('option');
+			five.value = '5';
+			five.innerHTML = 'V';
+			if ({{ filter.level }} == 5)
+			{
+				five.selected = true
+			}
+			level.appendChild(five);
+			var delbutton = document.createElement('button');
+			delbutton.setAttribute('onclick','parentNode.parentNode.removeChild(parentNode)');
+			delbutton.innerHTML = 'Remove Filter';
+			delbutton.type = 'button'
+			div.insertBefore(document.createElement('br'),div.firstChild);
+			div.insertBefore(delbutton,div.firstChild);
+			div.insertBefore(level,div.firstChild);
+			div.insertBefore(element,div.firstChild);
+			document.forms.filters.insertBefore(div,document.forms.filters.firstChild);
+
+			
+			counter++;
+		{% endfor %}
+	}
 	function add() {
 		var element = document.createElement('select');
 		element.name = 'filter' + counter;
-		{% for skill in skills %}
-			var skill{{ skill.typeID }} = document.createElement('option');
-			skill{{ skill.typeID }}.value = '{{ skill.typeID }}';
-			skill{{ skill.typeID }}.innerHTML = '{{ skill.name }}';
-			element.appendChild(skill{{ skill.typeID }});
-		{% endfor %}		
+		for (var i = 0; i < skillList.length; i++) 
+			{    			
+				element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , false) );
+			}
 		var level = document.createElement('select');
 		level.name = 'level' + counter;
 		var one = document.createElement('option');
@@ -42,6 +126,7 @@
 
 	}
 
+	window.onload = start
  </script>
  {% endblock %}
 {% block content %}

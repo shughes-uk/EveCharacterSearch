@@ -3,19 +3,27 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from bazaar.models import *
+from django.utils import simplejson
 import datetime
 import re
+from django.core import serializers
+
 
 R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
 
 def index(request):
-    context = {'skills':Skill.objects.all()}
+    context = {'skills':Skill.objects.all().order_by('groupName','name')}
+    context = {'js_skills': serializers.serialize("json", context['skills']) }
+
     context['threads'] = []
     if len(request.POST) > 0:
         filterset =  getFilters(request.POST)
+        context['filters'] = filterset
         results = Character.objects.all()
-        for f in filterset.values():
+        print context['filters']
+
+        for f in filterset:
             results = results.filter(skills__skill__typeID=f['typeid'],skills__level__gte=f['level'])
         if len(results) > 0:
             for result in results:
@@ -43,4 +51,4 @@ def getFilters(post):
                     filters[fnumber] = { 'typeid' : int(post[key])}
             else:
                 continue
-    return filters
+    return filters.values()
