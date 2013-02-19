@@ -13,22 +13,22 @@ R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
 
 def index(request):
-    context = {'skills':Skill.objects.all().order_by('groupName','name')}
-    context = {'js_skills': serializers.serialize("json", context['skills']) }
+    #context = {'skills':}
+    context = {'js_skills': serializers.serialize("json", Skill.objects.all().order_by('groupName','name') ) }
 
     context['threads'] = []
     if len(request.POST) > 0:
         filterset =  getFilters(request.POST)
         context['filters'] = filterset
         results = Character.objects.all()
-        print context['filters']
-
         for f in filterset:
             results = results.filter(skills__skill__typeID=f['typeid'],skills__level__gte=f['level'])
         if len(results) > 0:
             for result in results:
                 thread = Thread.objects.filter(character=result)[0]
                 context['threads'].append(thread)
+    context['threads'].sort(key=lambda x: x.last_update,reverse=True)
+    print context['threads']
     return render(request, 'bazaar/home.html', context)
 
 def getFilters(post):
