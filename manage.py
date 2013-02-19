@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-sys.path.append('/home/sam/ESCS')
+sys.path.append('C:\Users\samlaptop\Documents\GitHub\\bazaarscraper')
 from django.core.management import execute_manager
 
 import bazaarscraper.settings

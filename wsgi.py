@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/sam/ECS')
+sys.path.append('C:\Users\samlaptop\Documents\GitHub\\bazaarscraper')
 os.environ['DJANGO_SETTINGS_MODULE'] = 'bazaarscraper.settings'
 
 import django.core.handlers.wsgi
