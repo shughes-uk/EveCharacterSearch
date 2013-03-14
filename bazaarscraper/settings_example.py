@@ -1,6 +1,6 @@
 # Django settings for bazaarscraper project.
 import os
-
+import site_logging
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),

@@ -6,6 +6,7 @@ from django.conf.urls.defaults import patterns, include, url
 
 urlpatterns = patterns('',
 		    url(r'^$', 'bazaar.views.index'),
+		    url(r'^wp.+$','bazaar.views.spambot'),
     # Examples:
     # url(r'^$', 'bazaarscraper.views.home', name='home'),
     # url(r'^bazaarscraper/', include('bazaarscraper.foo.urls')),
