@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %} Home{% endblock %}
 {% block extra_js %}
 <script>
@@ -89,56 +90,113 @@
 			counter++;
 		{% endfor %}
 	}
-	function add() {
-		var element = document.createElement('select');
-		element.name = 'filter' + counter;
-		for (var i = 0; i < skillList.length; i++) 
-			{    			
-				element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , false) );
-			}
-		var level = document.createElement('select');
-		level.name = 'level' + counter;
-		var one = document.createElement('option');
-		one.value = '1';
-		one.innerHTML = 'I';
-		level.appendChild(one)
-		var two = document.createElement('option');
-		two.value = '2';
-		two.innerHTML = 'II';
-		level.appendChild(two);
-		var three = document.createElement('option');
-		three.value = '3';
-		three.innerHTML = 'III';
-		level.appendChild(three);
-		var four = document.createElement('option');
-		four.value = '4';
-		four.innerHTML = 'IV';
-		level.appendChild(four);
-		var five = document.createElement('option');
-		five.value = '5';
-		five.innerHTML = 'V';
-		level.appendChild(five);
+	function addFilter() {		
+		delbutton = makeDelButton()
+		filterType = makeFilterTypeSelect()
+		spBox = makeSPBox(counter)
+		opBox = makeOperandsBox(counter)
+		var optionsDiv = document.createElement('div')
+		optionsDiv.appendChild(filterType,optionsDiv.firstChild);
+		optionsDiv.appendChild(opBox,optionsDiv.firstChild);
+		optionsDiv.appendChild(spBox,optionsDiv.firstChild);		
+		optionsDiv.setAttribute('filter_number',counter)
+		var div = document.createElement('div');
+		div.insertBefore(document.createElement('br'),div.firstChild);
+		div.insertBefore(delbutton,div.firstChild);
+		div.insertBefore(optionsDiv,div.firstChild)
+		document.forms.filters.insertBefore(div,document.forms.filters.firstChild);
+		counter++;
+	}
+
+	function makeSPBox(fNumber){
+		var spSelect = document.createElement('select');
+		spSelect.name = 'sp_million'
+		spSelect.setAttribute('filter_number',fNumber)
+		for(var i=1;i<=200;i++)
+		{
+			var newOption = document.createElement('option');
+			newOption.Text = i;
+			newOption.innerHTML= i +'M';
+		    spSelect.options.add(newOption);
+	    }
+	    return spSelect
+	}
+	function makeDelButton(){
 		var delbutton = document.createElement('button');
 		delbutton.setAttribute('onclick','parentNode.parentNode.removeChild(parentNode)');
 		delbutton.innerHTML = 'Remove Filter';
 		delbutton.type = 'button'
-		var div = document.createElement('div');
-		div.insertBefore(document.createElement('br'),div.firstChild);
-		div.insertBefore(delbutton,div.firstChild);
-		div.insertBefore(level,div.firstChild);
-		div.insertBefore(element,div.firstChild);
-		document.forms.filters.insertBefore(div,document.forms.filters.firstChild);
-
-		counter++;
-
+		return delbutton
 	}
+
+	function makeFilterTypeSelect(){
+		var filterType = document.createElement('select');
+		filterType.name = 'filterType';
+		filterType.setAttribute('num', counter);
+		filterType.setAttribute('onChange','onFilterTypeChange(this)');
+		var sp = document.createElement('option');
+		sp.value = 'sp';
+		sp.innerHTML = 'SP';
+		filterType.appendChild(sp)
+		var skill = document.createElement('option');
+		skill.value = 'skill';
+		skill.innerHTML = 'Skill'
+		filterType.appendChild(skill)
+		return filterType;
+	}
+	function makeOperandsBox(fNumber){
+		var operandSelect = document.createElement('select');
+		operandSelect.name = 'operandSelect';
+		operandSelect.setAttribute('filter_number',fNumber);
+		var geEq = document.createElement('option');
+		geEq.value = '>=';
+		geEq.innerHTML = '>=';
+		var leEq = document.createElement('option');
+		leEq.value = '<=';
+		leEq.innerHTML = '<=';
+		var eq = document.createElement('option');
+		eq.value = '==';
+		eq.innerHTML = '=';
+		operandSelect.appendChild(eq);
+		operandSelect.appendChild(leEq);
+		operandSelect.appendChild(geEq);
+		return operandSelect;
+	}
+	function onFilterTypeChange(ele){
+		filterDiv = ele.parentNode;
+		while (filterDiv.firstChild){
+			if (filterDiv.childNodes.length > 1){
+				if (filterDiv.firstChild != ele){
+					filterDiv.removeChild(filterDiv.firstChild)
+				}
+				else{
+					filterDiv.removeChild(filterDiv.lastChild)
+				}
+			}
+			else{
+				break
+			} 	
+    	}
+    	selectedType = ele.options[ele.selectedIndex].value;
+    	if (selectedType == 'sp')
+    	{
+    		spBox = makeSPBox(filterDiv.getAttribute('filter_number'));
+    		operandBox = makeOperandsBox(filterDiv.getAttribute('filter_number'));
+    		filterDiv.appendChild(operandBox);
+    		filterDiv.appendChild(spBox);
+
+    	}
+
+		
+	}
+
 
 	window.onload = start
  </script>
  {% endblock %}
 {% block content %}
 	<h1 class='center'>Eve Character Search Alpha 0.1</h1>
-	 <div class='center'><button onclick='add()'>Add Filter</button></div>
+	 <div class='center'><button onclick='addFilter()'>Add Filter</button></div>
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
 	 	<input type='submit' value='Search'/><br>
@@ -147,6 +205,7 @@
 			<table class='center'>
 				<tr>
 					<th scope="col">Thread</th>
+					<th scope="col">Total SP</th>
 					<th scope="col">Last Seen</th>
 					<th scope="col">Eveboard Link</th>
 				<tr>
@@ -154,6 +213,11 @@
 				    <tr>
 				    	<td>
 				    		<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
+				    	</td>
+				    	<td>
+				    		{% filter intcomma %}
+				    		{{ thread.character.total_sp}}
+				    		{% endfilter %}
 				    	</td>
 				    	<td>
 				    		{{ thread.last_update }}

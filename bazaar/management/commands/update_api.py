@@ -133,6 +133,7 @@ def scrape_thread(thread):
 def buildchar(charname,skills):
     char = Character()
     char.name = charname
+    char.total_sp = 0
     char.save()
     for skill in skills:
         cs = CharSkill()
@@ -142,6 +143,7 @@ def buildchar(charname,skills):
         cs.skill_points = skill[2]
         cs.save()
         char.skills.add(cs)
+        char.total_sp += skill[2]
     char.save()
     return char
 

@@ -4,6 +4,7 @@ from django.db import models
 class Character(models.Model):
     name = models.CharField(max_length=64)
     skills = models.ManyToManyField('CharSkill',related_name='learned_by')
+    total_sp = models.IntegerField()
 
 class Skill(models.Model):
     name = models.CharField(max_length=64)
