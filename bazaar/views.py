@@ -18,14 +18,18 @@ def index(request):
     if len(request.POST) > 0:
         filterset =  getFilters(request.POST)
         context['filters'] = filterset
-        results = Character.objects.all()
-        for f in filterset:
-            results = results.filter(skills__skill__typeID=f['typeid'],skills__level__gte=f['level'])
-        if len(results) > 0:
-            for result in results:
-                threads = Thread.objects.filter(character=result)
-                if len(threads) > 0:
-                    context['threads'].append(threads[0])
+    else:
+        context['filters'] = request.session.get('filters',default=[])
+    results = Character.objects.all()
+    for f in context['filters']:
+        results = results.filter(skills__skill__typeID=f['typeid'],skills__level__gte=f['level'])
+    if len(results) > 0:
+        for result in results:
+            threads = Thread.objects.filter(character=result)
+            if len(threads) > 0:
+                context['threads'].append(threads[0])
+        
+    request.session['filters'] = context['filters']
     context['threads'].sort(key=lambda x: x.last_update,reverse=True)
     return render(request, 'bazaar/home.html', context)
 
