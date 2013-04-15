@@ -4,6 +4,7 @@
 {% block extra_js %}
 <script>
 	var skillList = {{ js_skills|safe }}
+	var filterList = {{ js_filters|safe }}
 	var counter = 1
 	function delself(){
 		parentNode.parentNode.removeChild(parentNode)
@@ -19,83 +20,54 @@
 		return skillEle;
 	}
 	function start() {
-		{% for filter in filters %}
-			var element = document.createElement('select');
-			element.name = 'filter' + counter;
-			for (var i = 0; i < skillList.length; i++) 
-			{    			
-				if ( skillList[i]['fields']['typeID'] == {{ filter.typeid }} )
-				{
-					element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , true) );
-				}
-				else
-				{
-					element.appendChild( makeSkillSelectElement( skillList[i]['fields']['typeID'] , skillList[i]['fields']['name'] , false) );
-				}
-			}
-			var level = document.createElement('select');
-			level.name = 'level' + counter;
-			var one = document.createElement('option');
-			one.value = '1';
-			one.innerHTML = 'I';
-			if ({{ filter.level }} == 1)
+		for (var i = 0; i < filterList.length; i++)
+		{
+			delbutton = makeDelButton()
+			opBox = makeOperandsBox(counter,filterList[i].operandSelect)
+			var optionsDiv = document.createElement('span')
+			var mainDiv = document.createElement('div')
+			if (filterList[i].sp_million)
 			{
-				one.selected = true
+				filterType = makeFilterTypeSelect('sp')
+				spBox = makeSPBox(counter,filterList[i].sp_million)
+				optionsDiv.appendChild(filterType)
+				optionsDiv.appendChild(opBox)
+				optionsDiv.appendChild(spBox)	
 			}
-			level.appendChild(one)
-			var two = document.createElement('option');
-			two.value = '2';
-			two.innerHTML = 'II';
-			if ({{ filter.level }} == 2)
+			else if(filterList[i].level_box)
 			{
-				two.selected = true
+				filterType = makeFilterTypeSelect('skill')
+				catBox = makeSkillCatBox(counter,filterList[i].skill_cat)
+				skillBox = makeSkillBox(counter,filterList[i].skill_cat,filterList[i].skill_typeID)
+				levelBox = makeLevelBox(counter,filterList[i].level_box)
+				optionsDiv.appendChild(filterType)
+				optionsDiv.appendChild(catBox)
+				optionsDiv.appendChild(skillBox)
+				optionsDiv.appendChild(opBox)
+				optionsDiv.appendChild(levelBox)
 			}
-			level.appendChild(two);
-			var three = document.createElement('option');
-			three.value = '3';
-			three.innerHTML = 'III';
-			if ({{ filter.level }} == 3)
+			mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
+			mainDiv.insertBefore(delbutton,mainDiv.firstChild);
+			mainDiv.insertBefore(optionsDiv,mainDiv.firstChild)
+			document.forms.filters.insertBefore(mainDiv,document.forms.filters.lastElementChild);
+			if (counter % 2 == 1)
 			{
-				three.selected = true
+				mainDiv.setAttribute('class','div_odd')
 			}
-			level.appendChild(three);
-			var four = document.createElement('option');
-			four.value = '4';
-			four.innerHTML = 'IV';
-			if ({{ filter.level }} == 4)
+			else
 			{
-				four.selected = true
+				mainDiv.setAttribute('class','div_even')
 			}
-			level.appendChild(four);
-			var five = document.createElement('option');
-			five.value = '5';
-			five.innerHTML = 'V';
-			if ({{ filter.level }} == 5)
-			{
-				five.selected = true
-			}
-			level.appendChild(five);
-			var delbutton = document.createElement('button');
-			delbutton.setAttribute('onclick','parentNode.parentNode.removeChild(parentNode)');
-			delbutton.innerHTML = 'Remove Filter';
-			delbutton.type = 'button'
-			var div = document.createElement('div');
-			div.insertBefore(document.createElement('br'),div.firstChild);
-			div.insertBefore(delbutton,div.firstChild);
-			div.insertBefore(level,div.firstChild);
-			div.insertBefore(element,div.firstChild);
-			document.forms.filters.insertBefore(div,document.forms.filters.firstChild);
-
-			
-			counter++;
-		{% endfor %}
+			counter++
+		}
+		
 	}
 	function addFilter() {		
 		delbutton = makeDelButton()
 		filterType = makeFilterTypeSelect()
 		spBox = makeSPBox(counter)
 		opBox = makeOperandsBox(counter)
-		var optionsDiv = document.createElement('div')
+		var optionsDiv = document.createElement('span')
 		optionsDiv.appendChild(filterType,optionsDiv.firstChild);
 		optionsDiv.appendChild(opBox,optionsDiv.firstChild);
 		optionsDiv.appendChild(spBox,optionsDiv.firstChild);		
@@ -104,18 +76,52 @@
 		div.insertBefore(document.createElement('br'),div.firstChild);
 		div.insertBefore(delbutton,div.firstChild);
 		div.insertBefore(optionsDiv,div.firstChild)
-		document.forms.filters.insertBefore(div,document.forms.filters.firstChild);
+		document.forms.filters.insertBefore(div,document.forms.filters.lastElementChild);
+		if (counter % 2 == 1)
+		{
+			div.setAttribute('class','div_odd')
+		}
+		else
+		{
+			div.setAttribute('class','div_even')
+		}
 		counter++;
 	}
+	function makeSkillCatBox(fNumber,selectedID){
+		var skillCatSelect = document.createElement('select');
+		skillCatSelect.name = "('skill_cat'," + fNumber + ')';
+		skillCatSelect.setAttribute('onChange','onSkillCatChange(this)');
+		var catList = new Array();
+		for (var i = 0; i < skillList.length; i++) 
+		{    			
+			if (catList.indexOf(skillList[i]['fields']['groupName']) != -1)
+			{
+				continue;
+			}
+			else
+			{
+				catList.push(skillList[i]['fields']['groupName']);
+				var catOption = document.createElement('option');
+				catOption.value = skillList[i]['fields']['groupID'];
+				catOption.innerHTML = skillList[i]['fields']['groupName'];
+				skillCatSelect.options.add(catOption);
+				if (selectedID == skillList[i]['fields']['groupID'])
+				{
+					catOption.selected = true;
 
+				}
+			}
+		} 
+		return skillCatSelect;
+	}
 	function makeSPBox(fNumber){
 		var spSelect = document.createElement('select');
-		spSelect.name = 'sp_million'
+		spSelect.name = "('sp_million'," + fNumber + ')';
 		spSelect.setAttribute('filter_number',fNumber)
 		for(var i=1;i<=200;i++)
 		{
 			var newOption = document.createElement('option');
-			newOption.Text = i;
+			newOption.value = i;
 			newOption.innerHTML= i +'M';
 		    spSelect.options.add(newOption);
 	    }
@@ -129,7 +135,7 @@
 		return delbutton
 	}
 
-	function makeFilterTypeSelect(){
+	function makeFilterTypeSelect(selectedType){
 		var filterType = document.createElement('select');
 		filterType.name = 'filterType';
 		filterType.setAttribute('num', counter);
@@ -142,24 +148,40 @@
 		skill.value = 'skill';
 		skill.innerHTML = 'Skill'
 		filterType.appendChild(skill)
+		if (selectedType == 'skill')
+		{
+			skill.selected = true;
+		}
 		return filterType;
 	}
-	function makeOperandsBox(fNumber){
+	function makeOperandsBox(fNumber,selectedType){
 		var operandSelect = document.createElement('select');
-		operandSelect.name = 'operandSelect';
+		operandSelect.name = "('operandSelect'," + fNumber + ')';
 		operandSelect.setAttribute('filter_number',fNumber);
 		var geEq = document.createElement('option');
 		geEq.value = '>=';
-		geEq.innerHTML = '>=';
+		geEq.innerHTML = 'Greater than';
 		var leEq = document.createElement('option');
 		leEq.value = '<=';
-		leEq.innerHTML = '<=';
+		leEq.innerHTML = 'Less than';
 		var eq = document.createElement('option');
 		eq.value = '==';
-		eq.innerHTML = '=';
+		eq.innerHTML = 'Exactly';
 		operandSelect.appendChild(eq);
 		operandSelect.appendChild(leEq);
 		operandSelect.appendChild(geEq);
+		if (selectedType =='>=')
+		{
+			geEq.selected = true
+		}
+		if (selectedType == '<=')
+		{
+			leEq.selected = true
+		}
+		if (selectedType == '==')
+		{
+			eq.selected = true
+		}
 		return operandSelect;
 	}
 	function onFilterTypeChange(ele){
@@ -186,8 +208,98 @@
     		filterDiv.appendChild(spBox);
 
     	}
+    	else
+    	{
+    		skillCatBox = makeSkillCatBox(filterDiv.getAttribute('filter_number'));
+    		filterDiv.appendChild(skillCatBox);
+    		onSkillCatChange(skillCatBox);
+    	}
+	}
+	function makeSkillBox(fNumber , groupID , selectedID){
+		var skillBox = document.createElement('select');
+		skillBox.name = "('skill_typeID'," + fNumber + ')';
+		skillBox.setAttribute('filter_number' , fNumber);
+		for (var i = 0; i < skillList.length; i++) 
+		{    			
+			if (skillList[i]['fields']['groupID'] == groupID)
+			{
+				var skillOption = document.createElement('option');
+				skillOption.value = skillList[i]['fields']['typeID'];
+				skillOption.innerHTML = skillList[i]['fields']['name'];
+				skillBox.options.add(skillOption);
+				if (skillList[i]['fields']['typeID'] == selectedID)
+				{
+					skillOption.selected  = true;
+				}
+			}
+		} 
+		return skillBox;
+	}
+	function makeLevelBox(fNumber , selected){
+		var levelBox = document.createElement('select');
+		levelBox.name = "('level_box'," + fNumber + ')';
+		levelBox.setAttribute('filter_number',fNumber);
 
-		
+		var one = document.createElement('option');
+		one.value = '1';
+		one.innerHTML = 'I';
+		levelBox.appendChild(one)
+		var two = document.createElement('option');
+		two.value = '2';
+		two.innerHTML = 'II';
+		levelBox.appendChild(two);
+		var three = document.createElement('option');
+		three.value = '3';
+		three.innerHTML = 'III';
+		levelBox.appendChild(three);
+		var four = document.createElement('option');
+		four.value = '4';
+		four.innerHTML = 'IV';
+		levelBox.appendChild(four);
+		var five = document.createElement('option');
+		five.value = '5';
+		five.innerHTML = 'V';
+		levelBox.appendChild(five);
+		switch(selected)
+		{
+			case 1:
+				one.selected = true;
+				break;
+			case 2:
+			  	two.selected = true;
+			  	break;
+			case 3:
+				three.selected = true;
+				break;
+			case 4:
+				four.selected = true;
+				break;
+			case 5:
+				five.selected = true;
+				break;
+			default:
+				break;
+		}
+		return levelBox
+	}
+	function onSkillCatChange(ele){
+		var fNumber = ele.parentNode.getAttribute('filter_number');
+		var groupID = ele.options[ele.selectedIndex].value;
+		while (ele.parentNode.lastChild)
+		{
+			if (ele.parentNode.lastChild != ele)
+			{
+				ele.parentNode.removeChild(ele.parentNode.lastChild);
+			}
+			else
+			{
+				break
+			}
+		}
+		ele.parentNode.appendChild(makeSkillBox(fNumber,groupID));
+		ele.parentNode.appendChild(makeOperandsBox(fNumber));
+		ele.parentNode.appendChild(makeLevelBox(fNumber));		
+
 	}
 
 
@@ -195,12 +307,14 @@
  </script>
  {% endblock %}
 {% block content %}
-	<h1 class='center'>Eve Character Search Alpha 0.1</h1>
-	 <div class='center'><button onclick='addFilter()'>Add Filter</button></div>
+	<h1 class='center'>Eve Character Search Alpha 0.2</h1>
+	 
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
-	 	<input type='submit' value='Search'/><br>
+	 	<div class='center'><button type='button' onclick='addFilter()'>Add Filter</button></div>
+	 	<input type='submit' value='Search'/>
 	 </form>
+	<br>
 	{% if threads %}
 			<table class='center'>
 				<tr>
@@ -241,6 +355,16 @@
 		    <li>Contact twistfrog on jabber if you have anything to say</li>
 		</ul>
 		<h2>Changelog</h2>
+		<h3>16/04/2013 - v0.2</h3>
+		<ul style='text-align:left'>
+			<li>Now storing your searches via cookies</li>
+			<li>Search by total skillpoints</li>
+			<li>Operands for searching!</li>
+			<li>More javascript changes , filters are created entirely in JS now</li>
+			<li>Total SP table coloumn</li>
+			<li>Probably introduced a bunch of bugs</li>
+		</ul>
+
 		<h3>18/02/2013 - v0.1</h3>
 		<ul style='text-align:left'>
 			<li>Added 'Last seen' column to indicate when the thread was last seen on the front page</li>

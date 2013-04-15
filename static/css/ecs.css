@@ -1,3 +1,12 @@
+.div_odd{
+  background: #C0C0C0;
+  text-align: left;
+}
+.div_even{
+  background: #F0F0F0;
+  text-align: left;
+}
+
 th {
   background: #404853;
   color: #fff;
