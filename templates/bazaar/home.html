@@ -346,6 +346,10 @@
 				    </tr>
 			    {% endfor %}
 		    </table>
+	{% else %}
+	<div class='center' style='background-color:#C2C2B2'>
+	No search results, add a filter to get started or adjust your current ones
+	</div>
 	{% endif %}
 	</br>
 	</br>
@@ -361,6 +365,7 @@
 		<h2>Changelog</h2>
 		<h3>18/04/2013 - v0.25</h3>
 		<ul style='text-align:left'>
+			<li>Added explantion if there are no search results</li>
 			<li>Reordered the operand box so put 'exactly' as the last option as it doesn't really work for SP totals and was confusing people</li>
 			<li>Bugfix : Remember SP amount selected</li>
 		</ul>
