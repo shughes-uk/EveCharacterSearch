@@ -25,6 +25,7 @@
 			delbutton = makeDelButton()
 			opBox = makeOperandsBox(counter,filterList[i].operandSelect)
 			var optionsDiv = document.createElement('span')
+			optionsDiv.setAttribute('filter_number',counter)
 			var mainDiv = document.createElement('div')
 			if (filterList[i].sp_million)
 			{
