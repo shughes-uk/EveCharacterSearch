@@ -42,7 +42,7 @@
 				filterType = makeFilterTypeSelect('skill')
 				catBox = makeSkillCatBox(counter,filterList[i].skill_cat)
 				skillBox = makeSkillBox(counter,filterList[i].skill_cat,filterList[i].skill_typeID)
-				levelBox = makeLevelBox(counter,filterList[i].level_box)
+				levelBox = makeLevelBox(counter,parseInt(filterList[i].level_box))
 				optionsDiv.appendChild(filterType)
 				optionsDiv.appendChild(catBox)
 				optionsDiv.appendChild(skillBox)
