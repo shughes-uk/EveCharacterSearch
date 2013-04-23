@@ -67,13 +67,17 @@
 	}
 	function addFilter() {		
 		delbutton = makeDelButton()
-		filterType = makeFilterTypeSelect()
-		spBox = makeSPBox(counter)
+		filterType = makeFilterTypeSelect('skill')
+		catBox = makeSkillCatBox(counter,'266')
 		opBox = makeOperandsBox(counter)
+		skillBox = makeSkillBox(counter,'266','11584')
+		levelBox = makeLevelBox(counter)
 		var optionsDiv = document.createElement('span')
 		optionsDiv.appendChild(filterType,optionsDiv.firstChild);
+		optionsDiv.appendChild(catBox,optionsDiv.firstChild);
+		optionsDiv.appendChild(skillBox,optionsDiv.firstChild);
 		optionsDiv.appendChild(opBox,optionsDiv.firstChild);
-		optionsDiv.appendChild(spBox,optionsDiv.firstChild);		
+		optionsDiv.appendChild(levelBox,optionsDiv.firstChild);		
 		optionsDiv.setAttribute('filter_number',counter)
 		var div = document.createElement('div');
 		div.insertBefore(document.createElement('br'),div.firstChild);
