@@ -154,6 +154,7 @@ def scrape_eveo():
         existing = Thread.objects.filter(thread_id=thread['threadID'])
         if len(existing) > 0:
             existing[0].last_update = datetime.now()
+            existing[0].thread_title = thread['title']
             existing[0].save()
             continue
         else:
