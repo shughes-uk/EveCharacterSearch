@@ -2,16 +2,17 @@
 import os
 import site_logging
 
+#DEBUG = True
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+     (Samantha', 'shughes.uk@gmail.com'),
 )
 
 MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'your database',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'ecs',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -55,7 +56,7 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = '/home/teabiscuit/webapps/evestatic/'
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -71,7 +72,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
-    'path to static files',
+    '/home/teabiscuit/webapps/eve/ECS/static',
 )
 
 # List of finder classes that know how to find static files in
@@ -83,7 +84,7 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'PUT SOMETHING HERE JESUS CHRIST'
+SECRET_KEY = '6#sdasdg4985@$@0$+9l5c%-#l4sloa1y%el4ektvdd_a+ozfr'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -93,6 +94,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -103,7 +105,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'bazaarscraper.urls'
 
 TEMPLATE_DIRS = (
-        'path to templates',
+        '/home/teabiscuit/webapps/eve/ECS/templates',
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -117,7 +119,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'bazaar'
+    'bazaar',
+    'debug_toolbar',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -133,14 +136,15 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
         }
-    },
+    ,
     'loggers': {
+	'django.db.backends':{
+	     'handlers':[],
+	     'propagate':False,
+	     'level': 'DEBUG'},
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': [],
             'level': 'ERROR',
             'propagate': True,
         },
@@ -148,3 +152,5 @@ LOGGING = {
 }
 
 SESSION_ENGINE =  "django.contrib.sessions.backends.signed_cookies"
+ALLOWED_HOSTS = ['*']
+INTERNAL_IPS = ('81.135.33.97',)
