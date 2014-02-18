@@ -58,7 +58,7 @@ button, input {
     vertical-align: middle;
 }
 input {
-    margin-top: 25px;
+    margin-top: 0px;
 }
 
 table {
@@ -162,9 +162,9 @@ table th:last-child{
         border-top-right-radius:15px;
 }
 table tr:first-child td:first-child{
-	border-width:0px 0px 1px 0px;
+	border-width:0px 1px 1px 0px;
 }
 table tr:first-child td:last-child{
-	border-width:0px 0px 1px 1px;
+	border-width:0px 0px 1px 0px;
 }
 

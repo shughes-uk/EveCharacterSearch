@@ -2,8 +2,23 @@
 {% load humanize %}
 {% block title %} Home{% endblock %}
 {% block extra_js %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+<!--<script src="/static/javascript/jquery-latest.js" ></script>-->
+
+<script type="text/javascript" src="/static/javascript/jquery.tablesorter.js"></script> 
 <script>
-	var skillList = {{ js_skills|safe }}
+	$(document).ready(function(){
+		$("#thread_table").tablesorter();
+	}
+	);
+	var skillList = []
+	$.ajax({
+		  type: 'GET',
+		  url: "/static/json/skills.json",
+		  dataType: 'json',
+		  success: function(data) { skillList = data;},
+		  async: false	
+		});
 	var filterList = {{ js_filters|safe }}
 	var counter = 1
 	function delself(){
@@ -356,13 +371,16 @@ ga('send', {
 	 </form>
 	<br>
 	{% if threads %}
-			<table class='center'>
+			<table id="thread_table" class='center'>
+				<thead>
 				<tr>
 					<th scope="col">Thread</th>
 					<th scope="col">Total SP</th>
 					<th scope="col">Last Seen</th>
 					<th scope="col">Eveboard Link</th>
-				<tr>
+				</tr>
+				</thead>
+				<tbody>
 				{% for thread in threads %}
 				    <tr>
 				    	<td>
@@ -381,6 +399,7 @@ ga('send', {
 				        </td>
 				    </tr>
 			    {% endfor %}
+			    </tbody>
 		    </table>
 	{% else %}
 	<div class='center' style='background-color:#C2C2B2'>

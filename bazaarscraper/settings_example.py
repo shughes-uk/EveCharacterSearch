@@ -4,7 +4,7 @@ import site_logging
 
 #DEBUG = True
 ADMINS = (
-     (Samantha', 'shughes.uk@gmail.com'),
+     ('Samantha', 'shughes.uk@gmail.com'),
 )
 
 MANAGERS = ADMINS
