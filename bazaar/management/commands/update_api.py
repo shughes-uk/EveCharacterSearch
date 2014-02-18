@@ -14,7 +14,7 @@ skill_tree = '/eve/SkillTree.xml.aspx'
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        grab_skills()
+	grab_skills()
         scrape_eveo()
         prune_threads()
 
@@ -49,6 +49,7 @@ def grab_skills():
                         s = existing[0]
                     else:
                         s = Skill()
+			print "New Skill : " + skill.getAttribute('typeName')
                     s.typeID = skilltypeID
                     s.name = skillName
                     #descriptions can be blank
@@ -64,7 +65,7 @@ def grab_skills():
                     s.save()
 
 def prune_threads():
-    killdate = datetime.now() - timedelta(days=14)
+    killdate = datetime.now() - timedelta(days=28)
     to_prune = Thread.objects.filter(last_update__lte=killdate)
     for pruner in to_prune:
         if pruner.character:
@@ -129,7 +130,10 @@ def scrape_thread(thread):
                     return pilot_name.group(1)
     else:
         return None
-
+STUPID_OLDNAMELOOKUP = {
+			'Production Efficiency':'Material Efficiency',
+			'Capital Energy Emission Systems':'Capital Capacitor Emission Systems'
+			}
 def buildchar(charname,skills):
     char = Character()
     char.name = charname
@@ -138,7 +142,10 @@ def buildchar(charname,skills):
     for skill in skills:
         cs = CharSkill()
         cs.character = char
-        cs.skill = Skill.objects.filter(name=skill[0])[0]
+	if skill[0] in STUPID_OLDNAMELOOKUP:
+		cs.skill = Skill.objects.filter(name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
+	else:	
+	        cs.skill = Skill.objects.filter(name=skill[0])[0]
         cs.level = skill[1]
         cs.skill_points = skill[2]
         cs.save()

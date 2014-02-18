@@ -1,9 +1,7 @@
 from django.shortcuts import render,redirect
 from bazaar.models import *
-from django.utils import simplejson
 from django.core import serializers
-import datetime , re , ast
-
+import datetime , re , ast , simplejson
 
 
 R_LEVEL = r'level([0-9]+)'
@@ -21,7 +19,9 @@ def index(request):
         filters = request.session.get('filters',default=[])
     if filters:
         results = applyFilters(filters)
-        if results > 0:
+    else:
+        results = Character.objects.all()    
+    if results > 0:
             for result in results:
                 threads = Thread.objects.filter(character=result)
                 if len(threads) > 0:

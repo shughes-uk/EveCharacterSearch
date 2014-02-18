@@ -1,8 +1,13 @@
 import os
 import sys
-sys.path.append('C:\Users\samlaptop\Documents\GitHub\\bazaarscraper')
-os.environ['DJANGO_SETTINGS_MODULE'] = 'bazaarscraper.settings'
+#import bazaarscraper.settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bazaarscraper.settings')
 
-import django.core.handlers.wsgi
+#raise(Exception(str(sys.path)))
 
-application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+
+sys.path.append('/home/teabiscuit/webapps/eve/ECS/')
+
+
+application = get_wsgi_application()

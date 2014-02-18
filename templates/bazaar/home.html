@@ -2,8 +2,6 @@
 {% load humanize %}
 {% block title %} Home{% endblock %}
 {% block extra_js %}
-<link href="{{ STATIC_URL }}images/favicon.ico" rel="icon" type="image/x-icon">
-
 <script>
 	var skillList = {{ js_skills|safe }}
 	var filterList = {{ js_filters|safe }}
@@ -171,10 +169,10 @@
 		operandSelect.setAttribute('filter_number',fNumber);
 		var geEq = document.createElement('option');
 		geEq.value = '>=';
-		geEq.innerHTML = 'Greater than';
+		geEq.innerHTML = 'Greater than or equal to';
 		var leEq = document.createElement('option');
 		leEq.value = '<=';
-		leEq.innerHTML = 'Less than';
+		leEq.innerHTML = 'Less than or equal to';
 		var eq = document.createElement('option');
 		eq.value = '==';
 		eq.innerHTML = 'Exactly';
@@ -316,14 +314,45 @@
 
 	window.onload = start
  </script>
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-37043458-1', 'evecharactersearch.com',{'siteSpeedSampleRate':100});
+  ga('send', 'pageview');
+function sendSearch(){
+ga('send', {
+  'hitType': 'event',          // Required.
+  'eventCategory': 'Searchbutton',   // Required.
+  'eventAction': 'click',   
+	})
+}
+
+function sendAddFilterClick(){
+ga('send', {
+  'hitType': 'event',          // Required.
+  'eventCategory': 'AddFilterbutton',   // Required.
+  'eventAction': 'click',
+        })
+}
+
+</script>
+
+
+
  {% endblock %}
 {% block content %}
-	<h1 class='center'>Eve Character Search Alpha 0.25</h1>
-	 
+</h1>
+	<h1 class='center'>Eve Character Search Alpha 0.3</h1>
+
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
-	 	<div class='center'><button type='button' onclick='addFilter()'>Add Filter</button></div>
-	 	<input type='submit' value='Search'/>
+	 	<div class='center'><button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button></div>
+	 	<input type='submit' onclick='sendSearch()'value='Search'/>
 	 </form>
 	<br>
 	{% if threads %}
@@ -370,6 +399,18 @@
 		    <li>Contact twistfrog on jabber if you have anything to say</li>
 		</ul>
 		<h2>Changelog</h2>
+                <h3>15/02/2014 - 0.3</h3>
+                <ul style='text-align:left'>
+                        <li>Upgraded to django 1.6</li>
+			<li>Fixed some rubicon caused errors (more characters should parse now)</li>
+			<li>Maybe made things a little faster?</li>
+			<li>You see every character by default now.. for reasons</li>
+			<li>Threads are stored for 28 days now instead of 14 , as an experiment</li>
+                </ul>
+		<h3>21/01/2014 - 0.251</h3>
+		<ul style='text-align:left'>
+			<li>Added google ads as I am not made of money!</li>
+		</ul>
 		<h3>18/04/2013 - v0.25</h3>
 		<ul style='text-align:left'>
 			<li>Added explantion if there are no search results</li>
@@ -401,5 +442,6 @@
 
 
 	</div>
-	Css thanks to Canac Falc
+	Css thanks to Canac Falc</br>
+	<a href=http://www.reddit.com/user/evethrowaway99>Le Reddit Proof Of Ownership</a>
  {% endblock %}
