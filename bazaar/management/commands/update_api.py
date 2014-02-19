@@ -94,7 +94,7 @@ def grab_skills():
                     s.groupName = groupName
                     s.save()
     # dump to static json file
-    dump = open(settings.STATICFILES_DIRS[0] + 'json/skills.json', 'w')
+    dump = open(settings.STATICFILES_DIRS[0] + '/json/skills.json', 'w')
     serialized = serializers.serialize(
         "json", Skill.objects.all().order_by('groupName', 'name'))
     dump.write(serialized)
@@ -281,7 +281,7 @@ def scrape_eveo():
                     char.standings.add(
                         Standing.objects.create(corp=corp, value=0))
                     char.save()
-        dump = open(settings.STATICFILES_DIRS[0] + 'json/npc_corps.json', 'w')
+        dump = open(settings.STATICFILES_DIRS[0] + '/json/npc_corps.json', 'w')
         serialized = serializers.serialize(
             "json", NPC_Corp.objects.all().order_by('name'))
         dump.write(serialized)
