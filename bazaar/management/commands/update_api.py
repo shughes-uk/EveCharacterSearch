@@ -35,6 +35,12 @@ class Command(BaseCommand):
                     dest='prunethreads',
                     default=True,
                     help='Prune old threads from the database'),
+        make_option('--pages',
+                    action='store',
+                    type='int',
+                    dest='pages',
+                    default=1,
+                    help='The number of pages of the bazaar to scrape')
 
     )
 
@@ -42,7 +48,7 @@ class Command(BaseCommand):
         if options['doskills']:
             grab_skills()
         if options['scrapethreads']:
-            scrape_eveo()
+            scrape_eveo(options['pages'])
         if not options['prunethreads']:
             prune_threads()
 
@@ -111,17 +117,17 @@ def prune_threads():
 
 
 R_POSTID = r't=([0-9]+)'
-R_PILOT_NAME = r"pilot\/([\w'-]+)"
+R_PILOT_NAME = r"eveboard.com/pilot\/([\w'-]+)"
 R_SKILL_NAME = r"(.+[\w'-]+) / Rank"
 R_SKILL_LEVEL_SP = r"Level: ([0-6]) / SP: ([0-9]+(,[0-9]+)*)"
 FORUM_URL = 'https://forums.eveonline.com/'
-BAZAAR_URL = 'default.aspx?g=topics&f=277'
+BAZAAR_URL = 'default.aspx?g=topics&f=277&p=%i'
 THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
 EVEBOARD_URL = 'http://eveboard.com/pilot/%s'
 
 
-def get_first_page():
-    html = urllib2.urlopen(FORUM_URL + BAZAAR_URL).read()
+def get_bazaar_page(pagenumber):
+    html = urllib2.urlopen(FORUM_URL + BAZAAR_URL % pagenumber).read()
     soup = BeautifulSoup(html)
     threads = []
     for x in soup.findAll('a', attrs={'class': 'main nonew'}):
@@ -170,11 +176,9 @@ def scrape_standings(charname):
     standings.append(('-Security Status-', security_status))
     #some characters don't have standings available
     if response.url != (EVEBOARD_URL % charname) + '/standings':
-        print 'redirected'
         return standings
 
-    the_tables = soup.findAll(
-        'table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
+    the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
     if len(the_tables) == 6:
         for standing_row in the_tables[5].findAll('tr'):
             standings.append(
@@ -187,19 +191,15 @@ def scrape_standings(charname):
 def scrape_thread(thread):
     html = urllib2.urlopen(FORUM_URL + THREAD_URL % thread['threadID']).read()
     thread_soup = BeautifulSoup(html)
-    first_post = thread_soup.findAll(
-        'div', attrs={'id': 'forum_ctl00_MessageList_ctl00_DisplayPost1_MessagePost1'})[0]
-    eveboard_links = first_post.findAll('a')
-    if eveboard_links:
-        for link in eveboard_links:
-            if link:
-                # just grab the first eveboard link for now
-                # handle multiple characters in one thread later...
-                pilot_name = re.search(R_PILOT_NAME, eveboard_links[0]['href'])
-                if pilot_name:
-                    return pilot_name.group(1)
+    first_post = thread_soup.findAll('div', attrs={'id': 'forum_ctl00_MessageList_ctl00_DisplayPost1_MessagePost1'})[0]
+    eveboard_link = first_post.find('a', href=re.compile('.*eveboard.com/pilot/.*'))
+    if eveboard_link:
+        pilot_name = eveboard_link['href'].split('/pilot/')[1]
+        if pilot_name:
+            return pilot_name
     else:
         return None
+
 STUPID_OLDNAMELOOKUP = {
     'Production Efficiency': 'Material Efficiency',
     'Capital Energy Emission Systems': 'Capital Capacitor Emission Systems'
@@ -245,8 +245,10 @@ def buildchar(charname, skills, standings):
     return char
 
 
-def scrape_eveo():
-    threads = get_first_page()
+def scrape_eveo(num_pages):
+    threads = []
+    for x in range(1, num_pages):
+        threads.extend(get_bazaar_page(x))
     for thread in threads:
         existing = Thread.objects.filter(thread_id=thread['threadID'])
         if len(existing) > 0:
@@ -282,8 +284,7 @@ def scrape_eveo():
                         Standing.objects.create(corp=corp, value=0))
                     char.save()
         dump = open(settings.STATICFILES_DIRS[0] + '/json/npc_corps.json', 'w')
-        serialized = serializers.serialize(
-            "json", NPC_Corp.objects.all().order_by('name'))
+        serialized = serializers.serialize("json", NPC_Corp.objects.all().order_by('name'))
         dump.write(serialized)
 
 if __name__ == '__main__':

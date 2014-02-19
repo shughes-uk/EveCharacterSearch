@@ -279,7 +279,14 @@
 			var corpOption = document.createElement('option');
 			corpOption.value = npccorpList[i]['fields']['name'];
 			corpOption.innerHTML = npccorpList[i]['fields']['name'];
-			corpBox.options.add(corpOption);
+			if (npccorpList[i]['fields']['name'] == '-Security Status-')
+			{
+				corpBox.options.add(corpOption,corpBox.options.firstChild);
+			}
+			else
+			{
+				corpBox.options.add(corpOption);
+			}
 			if (npccorpList[i]['fields']['name'] == selectedCorp)
 			{
 				corpOption.selected  = true;
@@ -461,7 +468,7 @@ ga('send', {
 				    		{% endfilter %}
 				    	</td>
 				    	<td>
-				    		{{ thread.last_update }}
+				    		{{ thread.last_update|date:"M d, Y h:i A" }}
 				    	</td>
 				    	<td align='center'>
 				        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{{ STATIC_URL }}images/eveboard.jpg" alt='Eveboard link'/></a>
@@ -493,6 +500,8 @@ ga('send', {
 	    			<li>Security status is a subcategory of standings</li>
 	    			<li>Issue: Not all eveboard characters have standings listed, these will not show up in a search with a standing filter</li>
 	    			<li>Except security status which is available for all characters</li>
+	    			<li>Scrape multiple pages of character bazaar at once if required</li>
+	    			<li>Fix date sorting on results columns</li>
 	    		</ul>
 			<h3>18/02/2014 - 0.4</h3>
     		<ul style='text-align:left'>
