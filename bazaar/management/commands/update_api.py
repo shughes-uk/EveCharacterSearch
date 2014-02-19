@@ -2,6 +2,7 @@ import urllib
 from xml.dom.minidom import parseString
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.core.exceptions import ObjectDoesNotExist
 from bazaar.models import *
 from datetime import datetime, timedelta
 from BeautifulSoup import BeautifulSoup
@@ -14,6 +15,7 @@ from django.core import serializers
 EXPIRE_THREAD = 28
 api_site = 'https://api.eveonline.com'
 skill_tree = '/eve/SkillTree.xml.aspx'
+NEW_CORPS = []
 
 
 class Command(BaseCommand):
@@ -28,6 +30,11 @@ class Command(BaseCommand):
                     dest='scrapethreads',
                     default=False,
                     help="Scrape eve threads for characters"),
+        make_option('--no_prune',
+                    action='store_false',
+                    dest='prunethreads',
+                    default=True,
+                    help='Prune old threads from the database'),
 
     )
 
@@ -36,7 +43,8 @@ class Command(BaseCommand):
             grab_skills()
         if options['scrapethreads']:
             scrape_eveo()
-        prune_threads()
+        if not options['prunethreads']:
+            prune_threads()
 
 
 def grab_api(url, id=None, vcode=None, params={}):
@@ -85,9 +93,10 @@ def grab_skills():
                     s.groupID = groupID
                     s.groupName = groupName
                     s.save()
-    #dump to static json file
+    # dump to static json file
     dump = open(settings.STATICFILES_DIRS[0] + 'json/skills.json', 'w')
-    serialized = serializers.serialize("json", Skill.objects.all().order_by('groupName', 'name'))
+    serialized = serializers.serialize(
+        "json", Skill.objects.all().order_by('groupName', 'name'))
     dump.write(serialized)
 
 
@@ -122,7 +131,7 @@ def get_first_page():
     return threads
 
 
-def scrape_eveboard(charname):
+def scrape_skills(charname):
     html = urllib2.urlopen(EVEBOARD_URL % charname).read()
     soup = BeautifulSoup(html)
     # check if it requires a password
@@ -143,6 +152,36 @@ def scrape_eveboard(charname):
         sp = int(level_sp.group(2).replace(',', ''))
         skills.append((skill_name, level, sp))
     return skills
+
+
+def scrape_standings(charname):
+    standings = []
+    response = urllib2.urlopen(EVEBOARD_URL % charname + '/standings')
+    soup = BeautifulSoup(response.read())
+    ispassworded = soup.findAll('input', attrs={'type': 'password'})
+    if len(ispassworded) > 0:
+        return standings
+
+    #grab security status
+    ssrow = soup.find('td', text='Security Status').parent.parent
+    # rip out a span that messes things up
+    ssrow.span.extract()
+    security_status = float(ssrow('td')[1].text)
+    standings.append(('-Security Status-', security_status))
+    #some characters don't have standings available
+    if response.url != (EVEBOARD_URL % charname) + '/standings':
+        print 'redirected'
+        return standings
+
+    the_tables = soup.findAll(
+        'table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
+    if len(the_tables) == 6:
+        for standing_row in the_tables[5].findAll('tr'):
+            standings.append(
+                (standing_row('td')[1].text, float(standing_row('td')[2].text)))
+        return standings
+    else:
+        return standings
 
 
 def scrape_thread(thread):
@@ -167,7 +206,7 @@ STUPID_OLDNAMELOOKUP = {
 }
 
 
-def buildchar(charname, skills):
+def buildchar(charname, skills, standings):
     char = Character()
     char.name = charname
     char.total_sp = 0
@@ -185,6 +224,23 @@ def buildchar(charname, skills):
         cs.save()
         char.skills.add(cs)
         char.total_sp += skill[2]
+    for standing in standings:
+        try:
+            corp = NPC_Corp.objects.get(name=standing[0])
+        except ObjectDoesNotExist:
+            corp = NPC_Corp.objects.create(name=standing[0])
+            print 'Created new npc corp', standing[0], 'will generate new json dump at end'
+            corp.save()
+            global NEW_CORPS
+            NEW_CORPS.append(corp)
+        char.standings.add(
+            Standing.objects.create(corp=corp, value=standing[1]))
+    if standings:
+        for corp in NPC_Corp.objects.all():
+            try:
+                char.standings.get(corp=corp)
+            except ObjectDoesNotExist:
+                char.standings.add(Standing.objects.create(corp=corp, value=0))
     char.save()
     return char
 
@@ -201,7 +257,8 @@ def scrape_eveo():
         else:
             charname = scrape_thread(thread)
             if charname:
-                skills = scrape_eveboard(charname)
+                skills = scrape_skills(charname)
+                standings = scrape_standings(charname)
                 t = Thread()
                 t.thread_id = thread['threadID']
                 t.last_update = datetime.now()
@@ -209,12 +266,25 @@ def scrape_eveo():
                 t.thread_title = thread['title']
                 if skills:
                     t.blacklisted = False
-                    character = buildchar(charname, skills)
+                    character = buildchar(charname, skills, standings)
                     t.character = character
                     t.save()
                 else:
                     t.blacklisted = True
                     t.save()
+    if NEW_CORPS:
+        for char in Character.objects.all():
+            for corp in NEW_CORPS:
+                try:
+                    char.standings.get(corp=corp)
+                except:
+                    char.standings.add(
+                        Standing.objects.create(corp=corp, value=0))
+                    char.save()
+        dump = open(settings.STATICFILES_DIRS[0] + 'json/npc_corps.json', 'w')
+        serialized = serializers.serialize(
+            "json", NPC_Corp.objects.all().order_by('name'))
+        dump.write(serialized)
 
 if __name__ == '__main__':
     scrape_eveo()

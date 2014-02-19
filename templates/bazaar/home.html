@@ -17,21 +17,21 @@
 		  success: function(data) { skillList = data;},
 		  async: false	
 		});
+	var npccorpList = []
+	$.ajax({
+		  type: 'GET',
+		  url: "/static/json/npc_corps.json",
+		  dataType: 'json',
+		  success: function(data) { npccorpList = data;},
+		  async: false	
+		});
 	var filterList = {{ js_filters|safe }}
 	var counter = 1
+	
 	function delself(){
 		parentNode.parentNode.removeChild(parentNode)
 	}
-	function makeSkillSelectElement(typeID,name,selected)	{
-		var skillEle = document.createElement('option');
-		skillEle.value = typeID;
-		skillEle.innerHTML = name;
-		if (selected)
-		{
-			skillEle.selected = true;
-		}
-		return skillEle;
-	}
+
 	function start() {
 		for (var i = 0; i < filterList.length; i++)
 		{
@@ -59,6 +59,16 @@
 				optionsDiv.appendChild(skillBox)
 				optionsDiv.appendChild(opBox)
 				optionsDiv.appendChild(levelBox)
+			}
+			else if(filterList[i].corporation_box)
+			{
+				filterType = makeFilterTypeSelect('standing');
+				corpBox = makeCorpNameBox(counter,filterList[i].corporation_box);
+				standingValBox = makeStandingValBox(counter,parseFloat(filterList[i].standing_amount));
+				optionsDiv.appendChild(filterType);
+				optionsDiv.appendChild(corpBox);
+				optionsDiv.appendChild(opBox);
+				optionsDiv.appendChild(standingValBox);
 			}
 			mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
 			mainDiv.insertBefore(delbutton,mainDiv.firstChild);
@@ -174,6 +184,14 @@
 		{
 			skill.selected = true;
 		}
+		var standing = document.createElement('option');
+		standing.value = 'standing';
+		standing.innerHTML = 'Standing';
+		filterType.appendChild(standing)
+		if (selectedType == 'standing')
+		{
+			standing.selected = true;
+		}
 		return filterType;
 	}
 	function makeOperandsBox(fNumber,selectedType){
@@ -208,16 +226,21 @@
 	}
 	function onFilterTypeChange(ele){
 		filterDiv = ele.parentNode;
-		while (filterDiv.firstChild){
-			if (filterDiv.childNodes.length > 1){
-				if (filterDiv.firstChild != ele){
+		while (filterDiv.firstChild)
+		{
+			if (filterDiv.childNodes.length > 1)
+			{
+				if (filterDiv.firstChild != ele)
+				{
 					filterDiv.removeChild(filterDiv.firstChild)
 				}
-				else{
+				else
+				{
 					filterDiv.removeChild(filterDiv.lastChild)
 				}
 			}
-			else{
+			else
+			{
 				break
 			} 	
     	}
@@ -230,12 +253,61 @@
     		filterDiv.appendChild(spBox);
 
     	}
-    	else
+    	else if (selectedType == 'skill')
     	{
     		skillCatBox = makeSkillCatBox(filterDiv.getAttribute('filter_number'));
     		filterDiv.appendChild(skillCatBox);
     		onSkillCatChange(skillCatBox);
     	}
+    	else if (selectedType == 'standing')
+    	{
+    		corpNameBox = makeCorpNameBox(filterDiv.getAttribute('filter_number'));
+    		standingValBox = makeStandingValBox(filterDiv.getAttribute('filter_number'));
+    		operandBox = makeOperandsBox(filterDiv.getAttribute('filter_number'));
+    		filterDiv.appendChild(corpNameBox);
+    		filterDiv.appendChild(operandBox);
+    		filterDiv.appendChild(standingValBox);
+    	}
+	}
+
+	function makeCorpNameBox(fNumber  , selectedCorp){
+		var corpBox = document.createElement('select');
+		corpBox.name = "('corporation_box'," + fNumber + ')';
+		corpBox.setAttribute('filter_number' , fNumber);
+		for (var i = 0; i < npccorpList.length; i++) 
+		{
+			var corpOption = document.createElement('option');
+			corpOption.value = npccorpList[i]['fields']['name'];
+			corpOption.innerHTML = npccorpList[i]['fields']['name'];
+			corpBox.options.add(corpOption);
+			if (npccorpList[i]['fields']['name'] == selectedCorp)
+			{
+				corpOption.selected  = true;
+			}
+		} 
+		return corpBox;
+	}
+	function makeStandingValBox(fNumber , selected){
+		if (typeof(selected) == "undefined")
+		{
+			selected = 0.0
+		}
+		var standingValBox = document.createElement('select');
+		standingValBox.name = "('standing_amount'," + fNumber + ')';
+		standingValBox.setAttribute('filter_number',fNumber);
+		for (var i = -10.0; i <= 10.0;i += 0.1)
+		{
+			i = parseFloat(i.toPrecision(4))
+			var opt = document.createElement('option');
+			opt.value = i;
+			opt.innerHTML = i;
+			standingValBox.appendChild(opt);
+			if (i == selected)
+			{
+				opt.selected = true;
+			}
+		}
+		return standingValBox
 	}
 	function makeSkillBox(fNumber , groupID , selectedID){
 		var skillBox = document.createElement('select');
@@ -337,6 +409,7 @@
 
   ga('create', 'UA-37043458-1', 'evecharactersearch.com',{'siteSpeedSampleRate':100});
   ga('send', 'pageview');
+
 function sendSearch(){
 ga('send', {
   'hitType': 'event',          // Required.
@@ -355,12 +428,10 @@ ga('send', {
 
 </script>
 
-
-
  {% endblock %}
 {% block content %}
 </h1>
-	<h1 class='center'>Eve Character Search Alpha 0.3</h1>
+	<h1 class='center'>Eve Character Search 0.5</h1>
 
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
@@ -416,6 +487,13 @@ ga('send', {
 		    <li>Contact twistfrog on jabber if you have anything to say</li>
 		</ul>
 		<h2>Changelog</h2>
+			<h3>19/02/2014 - 0.5</h3>
+	    		<ul style='text-align:left'>
+	    			<li>Added filtering by pilot standings!</li>
+	    			<li>Security status is a subcategory of standings</li>
+	    			<li>Issue: Not all eveboard characters have standings listed, these will not show up in a search with a standing filter</li>
+	    			<li>Except security status which is available for all characters</li>
+	    		</ul>
 			<h3>18/02/2014 - 0.4</h3>
     		<ul style='text-align:left'>
     			<li>Created static json blob for skills that is updated periodically, instead of a DB call every time</li>
