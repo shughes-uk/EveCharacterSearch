@@ -108,7 +108,6 @@ def grab_skills():
 
 def prune_threads():
     killdate = datetime.now() - timedelta(days=EXPIRE_THREAD)
-    print killdate
     to_prune = Thread.objects.filter(last_update__lte=killdate)
     for pruner in to_prune:
         print 'Removing [%s] thread that is expired past %s days' % (pruner.thread_title, EXPIRE_THREAD)
