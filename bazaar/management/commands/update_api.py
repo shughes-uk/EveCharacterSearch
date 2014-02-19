@@ -49,7 +49,7 @@ class Command(BaseCommand):
             grab_skills()
         if options['scrapethreads']:
             scrape_eveo(options['pages'])
-        if not options['prunethreads']:
+        if options['prunethreads']:
             prune_threads()
 
 
@@ -107,11 +107,16 @@ def grab_skills():
 
 
 def prune_threads():
-    print 'Removing threads that are expired past %s days' % EXPIRE_THREAD
     killdate = datetime.now() - timedelta(days=EXPIRE_THREAD)
+    print killdate
     to_prune = Thread.objects.filter(last_update__lte=killdate)
     for pruner in to_prune:
+        print 'Removing [%s] thread that is expired past %s days' % (pruner.thread_title, EXPIRE_THREAD)
         if pruner.character:
+            for skill in pruner.character.skills.all():
+                skill.delete()
+            for standing in pruner.character.standings.all():
+                standing.delete()
             pruner.character.delete()
     to_prune.delete()
 
@@ -169,23 +174,21 @@ def scrape_standings(charname):
         return standings
 
     #grab security status
-    ssrow = soup.find('td', text='Security Status').parent.parent
-    # rip out a span that messes things up
-    ssrow.span.extract()
-    security_status = float(ssrow('td')[1].text)
-    standings.append(('-Security Status-', security_status))
-    #some characters don't have standings available
-    if response.url != (EVEBOARD_URL % charname) + '/standings':
-        return standings
-
-    the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
-    if len(the_tables) == 6:
-        for standing_row in the_tables[5].findAll('tr'):
-            standings.append(
-                (standing_row('td')[1].text, float(standing_row('td')[2].text)))
-        return standings
-    else:
-        return standings
+    ssrow = soup.find('td', text='Security Status')
+    if ssrow:
+        ssrow = ssrow.parent.parent
+        # rip out a span that messes things up
+        ssrow.span.extract()
+        security_status = float(ssrow('td')[1].text)
+        standings.append(('-Security Status-', security_status))
+        #some characters don't have standings available
+        if response.url == (EVEBOARD_URL % charname) + '/standings':
+            the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
+            if len(the_tables) == 6:
+                for standing_row in the_tables[5].findAll('tr'):
+                    standings.append(
+                        (standing_row('td')[1].text, float(standing_row('td')[2].text)))
+    return standings
 
 
 def scrape_thread(thread):
