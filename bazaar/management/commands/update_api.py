@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from BeautifulSoup import BeautifulSoup
 import urllib2
 import re
+import sys
 from optparse import make_option
 from django.core import serializers
 
@@ -124,6 +125,8 @@ R_POSTID = r't=([0-9]+)'
 R_PILOT_NAME = r"eveboard.com/pilot\/([\w'-]+)"
 R_SKILL_NAME = r"(.+[\w'-]+) / Rank"
 R_SKILL_LEVEL_SP = r"Level: ([0-6]) / SP: ([0-9]+(,[0-9]+)*)"
+RS_PWD = [re.compile(r"[pP]\w*[wW]\w*\s*\w*[=\-\:]*\s*([\w\d]*)"), re.compile(r"[pP][aA][sS]\w*\s*\w*[=\-\:]*\s*([\w\d]*)")]
+#R_PWD = re.compile(r"\w*[pP]\w*[wW]\w*\s*\w*[=]*([\w\d]*)")
 FORUM_URL = 'https://forums.eveonline.com/'
 BAZAAR_URL = 'default.aspx?g=topics&f=277&p=%i'
 THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
@@ -141,13 +144,21 @@ def get_bazaar_page(pagenumber):
     return threads
 
 
-def scrape_skills(charname):
-    html = urllib2.urlopen(EVEBOARD_URL % charname).read()
-    soup = BeautifulSoup(html)
-    # check if it requires a password
-    ispassworded = soup.findAll('input', attrs={'type': 'password'})
-    if len(ispassworded) > 0:
-        return None
+def get_soup_eveboard(charname, standings=False, password=None):
+    url = EVEBOARD_URL % charname
+    if standings:
+        url += '/standings'
+    if password:
+        data = urllib.urlencode({'pw': password})
+        req = urllib2.Request(url, data)
+    else:
+        req = urllib2.Request(url)
+    html = urllib2.urlopen(req).read()
+    return BeautifulSoup(html)
+
+
+def scrape_skills(charname, password=None):
+    soup = get_soup_eveboard(charname, password=password)
     # grab all the skill rows
     skills = []
     for x in soup.findAll('td', attrs={'class': 'dotted', 'height': 20, 'style': ''}):
@@ -164,15 +175,10 @@ def scrape_skills(charname):
     return skills
 
 
-def scrape_standings(charname):
+def scrape_standings(charname, password=None):
     standings = []
-    response = urllib2.urlopen(EVEBOARD_URL % charname + '/standings')
-    soup = BeautifulSoup(response.read())
-    ispassworded = soup.findAll('input', attrs={'type': 'password'})
-    if len(ispassworded) > 0:
-        return standings
-
-    #grab security status
+    soup = get_soup_eveboard(charname, standings=True, password=password)
+    # grab security status
     ssrow = soup.find('td', text='Security Status')
     if ssrow:
         ssrow = ssrow.parent.parent
@@ -180,14 +186,27 @@ def scrape_standings(charname):
         ssrow.span.extract()
         security_status = float(ssrow('td')[1].text)
         standings.append(('-Security Status-', security_status))
-        #some characters don't have standings available
-        if response.url == (EVEBOARD_URL % charname) + '/standings':
-            the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
-            if len(the_tables) == 6:
-                for standing_row in the_tables[5].findAll('tr'):
-                    standings.append(
-                        (standing_row('td')[1].text, float(standing_row('td')[2].text)))
+        # some characters don't have standings available
+        the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
+        if len(the_tables) == 6:
+            for standing_row in the_tables[5].findAll('tr'):
+                standings.append(
+                    (standing_row('td')[1].text, float(standing_row('td')[2].text)))
     return standings
+
+
+def password_test(charname, password=None):
+    if password:
+        data = urllib.urlencode({'pw': password})
+        req = urllib2.Request(EVEBOARD_URL % charname, data)
+        html = urllib2.urlopen(req).read()
+    else:
+        html = urllib2.urlopen(EVEBOARD_URL % charname).read()
+    soup = BeautifulSoup(html)
+    # check if it requires a password
+    ispassworded = soup.findAll('input', attrs={'type': 'password'})
+    if len(ispassworded) > 0:
+        return True
 
 
 def scrape_thread(thread):
@@ -197,10 +216,28 @@ def scrape_thread(thread):
     eveboard_link = first_post.find('a', href=re.compile('.*eveboard.com/pilot/.*'))
     if eveboard_link:
         pilot_name = eveboard_link['href'].split('/pilot/')[1]
-        if pilot_name:
-            return pilot_name
+        if password_test(pilot_name):
+            # clean up tags and bbcode
+            for a in first_post('a'):
+                a.extract()
+            for img in first_post('img'):
+                img.extract()
+            first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace('</i>', '').replace('<b>', '').replace('</b>', '')
+            # find them passwords!
+            passwords = []
+            for regs in RS_PWD:
+                potential_passwords = regs.finditer(first_post)
+                for match in potential_passwords:
+                    if match.group(1) not in passwords:
+                        passwords.append(match.group(1))
+            for password in passwords:
+                if not password_test(pilot_name, password):
+                    return pilot_name, password
+            return None, None
+        else:
+            return pilot_name, None
     else:
-        return None
+        return None, None
 
 STUPID_OLDNAMELOOKUP = {
     'Production Efficiency': 'Material Efficiency',
@@ -249,7 +286,7 @@ def buildchar(charname, skills, standings):
 
 def scrape_eveo(num_pages):
     threads = []
-    for x in range(1, num_pages):
+    for x in range(1, num_pages + 1):
         threads.extend(get_bazaar_page(x))
     for thread in threads:
         existing = Thread.objects.filter(thread_id=thread['threadID'])
@@ -259,10 +296,10 @@ def scrape_eveo(num_pages):
             existing[0].save()
             continue
         else:
-            charname = scrape_thread(thread)
+            charname, password = scrape_thread(thread)
             if charname:
-                skills = scrape_skills(charname)
-                standings = scrape_standings(charname)
+                skills = scrape_skills(charname, password)
+                standings = scrape_standings(charname, password)
                 t = Thread()
                 t.thread_id = thread['threadID']
                 t.last_update = datetime.now()
@@ -288,6 +325,3 @@ def scrape_eveo(num_pages):
         dump = open(settings.STATICFILES_DIRS[0] + '/json/npc_corps.json', 'w')
         serialized = serializers.serialize("json", NPC_Corp.objects.all().order_by('name'))
         dump.write(serialized)
-
-if __name__ == '__main__':
-    scrape_eveo()
