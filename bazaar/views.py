@@ -25,7 +25,7 @@ def index(request):
     else:
         results = Character.objects.all()
     if results > 0:
-            threads = Thread.objects.filter(character__in=results).order_by('last_update')
+            threads = Thread.objects.filter(character__in=results).order_by('-last_update')
             paginator = Paginator(threads,25)
             page = request.GET.get('page')
             try:
