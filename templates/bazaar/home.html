@@ -70,6 +70,15 @@
 				optionsDiv.appendChild(opBox);
 				optionsDiv.appendChild(standingValBox);
 			}
+			else if(filterList[i].stringOpSelect)
+			{
+				filterType = makeFilterTypeSelect('cname')
+				opBox = makeStringOpBox(counter,filterList[i].stringOpSelect)
+				nameBox = makeStringInputBox(counter,filterList[i].sinput)
+				optionsDiv.appendChild(filterType)
+				optionsDiv.appendChild(opBox)
+				optionsDiv.appendChild(nameBox)
+			}
 			mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
 			mainDiv.insertBefore(delbutton,mainDiv.firstChild);
 			mainDiv.insertBefore(optionsDiv,mainDiv.firstChild)
@@ -192,6 +201,14 @@
 		{
 			standing.selected = true;
 		}
+		var cname = document.createElement('option');
+		cname.value = 'cname';
+		cname.innerHTML = 'Character Name';
+		filterType.appendChild(cname)
+		if (selectedType == 'cname')
+		{
+			cname.selected = true;
+		}
 		return filterType;
 	}
 	function makeOperandsBox(fNumber,selectedType){
@@ -268,6 +285,45 @@
     		filterDiv.appendChild(operandBox);
     		filterDiv.appendChild(standingValBox);
     	}
+    	else if (selectedType == 'cname')
+    	{
+    		stringOpBox = makeStringOpBox(filterDiv.getAttribute('filter_number'))
+    		stringInput = makeStringInputBox(filterDiv.getAttribute('filter_number'))
+    		filterDiv.appendChild(stringOpBox)
+    		filterDiv.appendChild(stringInput)
+    	}
+	}
+
+	function makeStringOpBox(fNumber , selectedOp){
+		var operandSelect = document.createElement('select');
+		operandSelect.name = "('stringOpSelect'," + fNumber + ')';
+		operandSelect.setAttribute('filter_number',fNumber);
+		var exact = document.createElement('option');
+		exact.value = 'exact';
+		exact.innerHTML = 'Exactly';
+		var contains = document.createElement('option');
+		contains.value = 'contains';
+		contains.innerHTML = 'Contains';
+	
+		operandSelect.appendChild(exact);
+		operandSelect.appendChild(contains);
+		if (selectedOp == 'exact')
+		{
+			exact.selected = true
+		}
+		if (selectedOp == 'contains')
+		{
+			contains.selected = true
+		}
+		return operandSelect;
+
+	}
+
+	function makeStringInputBox(fNumber , prefilled_string){
+		var inputBox = document.createElement('input');
+		inputBox.name = "('sinput'," + fNumber + ')';
+		inputBox.setAttribute('filter_number',fNumber);
+		return inputBox
 	}
 
 	function makeCorpNameBox(fNumber  , selectedCorp){
@@ -294,6 +350,7 @@
 		} 
 		return corpBox;
 	}
+
 	function makeStandingValBox(fNumber , selected){
 		if (typeof(selected) == "undefined")
 		{
@@ -316,6 +373,7 @@
 		}
 		return standingValBox
 	}
+
 	function makeSkillBox(fNumber , groupID , selectedID){
 		var skillBox = document.createElement('select');
 		skillBox.name = "('skill_typeID'," + fNumber + ')';
@@ -336,6 +394,7 @@
 		} 
 		return skillBox;
 	}
+
 	function makeLevelBox(fNumber , selected){
 		var levelBox = document.createElement('select');
 		levelBox.name = "('level_box'," + fNumber + ')';
@@ -383,6 +442,7 @@
 		}
 		return levelBox
 	}
+
 	function onSkillCatChange(ele){
 		var fNumber = ele.parentNode.getAttribute('filter_number');
 		var groupID = ele.options[ele.selectedIndex].value;
@@ -477,6 +537,22 @@ ga('send', {
 			    {% endfor %}
 			    </tbody>
 		    </table>
+		</br>
+		    <div class="center">
+			    <span class="step-links">
+			        {% if threads.has_previous %}
+			            <a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
+			        {% endif %}
+
+			        <span class="current">
+			            Page {{ threads.number }} of {{ threads.paginator.num_pages }}
+			        </span>
+
+			        {% if threads.has_next %}
+			            <a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
+			        {% endif %}
+			    </span>
+			</div>
 	{% else %}
 	<div class='center' style='background-color:#C2C2B2'>
 	No search results, add a filter to get started or adjust your current ones
@@ -494,6 +570,10 @@ ga('send', {
 		    <li>Contact <a href="http://www.reddit.com/user/evethrowaway99/">evethrowaway99</a> on reddit if you have anything to say</li>
 		</ul>
 		<h2>Changelog</h2>
+			<h3>15/07/2014 - 0.56</h3>
+	    		<ul style='text-align:left'>
+	    			<li>Added pagination to prevent huge query's that slow my hosting to crawl</li>
+	    		</ul>
 			<h3>19/02/2014 - 0.55</h3>
 	    		<ul style='text-align:left'>
 	    			<li>Scrape 85% of passworded characters!</li>

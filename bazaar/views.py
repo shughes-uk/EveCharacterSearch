@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from bazaar.models import *
 import ast
 import simplejson
@@ -24,7 +25,17 @@ def index(request):
     else:
         results = Character.objects.all()
     if results > 0:
-            context['threads'] = Thread.objects.filter(character__in=results)
+            threads = Thread.objects.filter(character__in=results)
+            paginator = Paginator(threads,25)
+            page = request.GET.get('page')
+            try:
+                threads = paginator.page(page)
+            except PageNotAnInteger:
+                # If page is not an integer, deliver first page.
+                threads = paginator.page(1)
+            except EmptyPage:
+                threads = paginator.page(paginator.num_pages)
+            context['threads'] = threads
     request.session['filters'] = filters
     context['js_filters'] = simplejson.dumps(filters)
     return render(request, 'bazaar/home.html', context)
