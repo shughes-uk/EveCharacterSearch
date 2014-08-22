@@ -92,10 +92,9 @@ def applyFilters(filters):
             if f['operandSelect'] == '<=':
                 results = results.filter(standings__corp__name=corp, standings__value__lte=req_standing)
         elif 'stringOpSelect' in f:
-            print 'poop'
             name = str(f['sinput'])
             if f['stringOpSelect'] == 'exact':
-                results = results.filter(name__iexact=name)
+                results = results.filter(name__iexact=name.replace(' ','_'))
             elif f['stringOpSelect'] == 'contains':
-                results = results.filter(name__icontains=name)
+                results = results.filter(name__icontains=name.replace(' ','_'))
     return results
