@@ -161,17 +161,19 @@ def scrape_skills(charname, password=None):
     soup = get_soup_eveboard(charname, password=password)
     # grab all the skill rows
     skills = []
-    for x in soup.findAll('td', attrs={'class': 'dotted', 'height': 20, 'style': ''}):
+    for x in soup.findAll('td', attrs={'class': 'dotted', 'height': 20}):
         spans = x.findAll('span')
         if len(spans) > 0:
             contents = spans[0].string.strip()
         else:
             contents = x.string.strip()
-        skill_name = re.search(R_SKILL_NAME, contents).group(1)
-        level_sp = re.search(R_SKILL_LEVEL_SP, contents)
-        level = int(level_sp.group(1))
-        sp = int(level_sp.group(2).replace(',', ''))
-        skills.append((skill_name, level, sp))
+        skill_match = re.search(R_SKILL_NAME, contents)
+        if skill_match:
+            skill_name = skill_match.group(1)
+            level_sp = re.search(R_SKILL_LEVEL_SP, contents)
+            level = int(level_sp.group(1))
+            sp = int(level_sp.group(2).replace(',', ''))
+            skills.append((skill_name, level, sp))
     return skills
 
 
