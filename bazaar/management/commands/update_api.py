@@ -171,7 +171,10 @@ def scrape_skills(charname, password=None):
         if len(spans) > 0:
             contents = spans[0].string.strip()
         else:
-            contents = x.string.strip()
+            if x.string:
+                contents = x.string.strip()
+            else:
+                contents = ''
         skill_match = re.search(R_SKILL_NAME, contents)
         if skill_match:
             skill_name = skill_match.group(1)
