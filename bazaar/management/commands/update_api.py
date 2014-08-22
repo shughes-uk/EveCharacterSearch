@@ -41,7 +41,12 @@ class Command(BaseCommand):
                     type='int',
                     dest='pages',
                     default=1,
-                    help='The number of pages of the bazaar to scrape')
+                    help='The number of pages of the bazaar to scrape'),
+        make_option('--update_skills',
+                    action='store_true',
+                    dest='update_skills',
+                    default=False,
+                    help='Update the skills of existing characters')
 
     )
 
@@ -49,7 +54,7 @@ class Command(BaseCommand):
         if options['doskills']:
             grab_skills()
         if options['scrapethreads']:
-            scrape_eveo(options['pages'])
+            scrape_eveo(options['pages'],options['update_skills'])
         if options['prunethreads']:
             prune_threads()
 
@@ -286,7 +291,7 @@ def buildchar(charname, skills, standings):
     return char
 
 
-def scrape_eveo(num_pages):
+def scrape_eveo(num_pages,update_skills):
     threads = []
     for x in range(1, num_pages + 1):
         threads.extend(get_bazaar_page(x))
@@ -295,6 +300,34 @@ def scrape_eveo(num_pages):
         if len(existing) > 0:
             existing[0].last_update = datetime.now()
             existing[0].thread_title = thread['title']
+            if update_skills:
+                charname, password = scrape_thread(thread)
+                if charname:
+                    skills = scrape_skills(charname, password)
+                    existing_char = existing[0].character
+                    new_sp_total = 0
+                    for skill in skills:
+                        existing_skill = existing_char.skills.filter(skill__name=skill[0])
+                        if len(existing_skill) > 0:
+                            existing_skill[0].skill_points = skill[2]
+                            existing_skill[0].level = skill[1]
+                            new_sp_total += skill[2]
+                            existing_skill[0].save()
+                        else:
+                            cs = CharSkill()
+                            cs.character = existing_char
+                            if skill[0] in STUPID_OLDNAMELOOKUP:
+                                cs.skill = Skill.objects.filter(
+                                    name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
+                            else:
+                                cs.skill = Skill.objects.filter(name=skill[0])[0]
+                            cs.level = skill[1]
+                            cs.skill_points = skill[2]
+                            cs.save()
+                            existing_char.skills.add(cs)
+                            new_sp_total =+ skill[2]
+                    existing_char.total_sp = new_sp_total
+                    existing_char.save()
             existing[0].save()
             continue
         else:
