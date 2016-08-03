@@ -536,7 +536,15 @@ ga('send', {
 				    		{{ thread.last_update|date:"M d, Y h:i A" }}
 				    	</td>
 				    	<td align='center'>
-				        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link'/></a>
+						    <div class="foo" style="
+						        border-radius: 5px;
+						        background-color: #212227;
+						        width: 80%;
+						        margin-left: auto;
+						        margin-right: auto;
+						        padding: 4px;
+						    ">
+    						<img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);"></a></div>
 				        </td>
 				    </tr>
 			    {% endfor %}
