@@ -1,17 +1,14 @@
-import urllib
-from xml.dom.minidom import parseString
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from django.core.exceptions import ObjectDoesNotExist
-from bazaar.models import *
-from datetime import datetime, timedelta
-from BeautifulSoup import BeautifulSoup
-import urllib2
 import re
-import sys
-from optparse import make_option
-from django.core import serializers
+import urllib
+import urllib2
+from datetime import datetime, timedelta
+from xml.dom.minidom import parseString
 
+from BeautifulSoup import BeautifulSoup
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.management.base import BaseCommand
+
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing, Thread)
 
 EXPIRE_THREAD = 28
 api_site = 'https://api.eveonline.com'
@@ -20,41 +17,41 @@ NEW_CORPS = []
 
 
 class Command(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--doskills',
-                    action='store_true',
-                    dest='doskills',
-                    default=False,
-                    help="Update the skill list from the API"),
-        make_option('--scrape_threads',
-                    action='store_true',
-                    dest='scrapethreads',
-                    default=False,
-                    help="Scrape eve threads for characters"),
-        make_option('--prune',
-                    action='store_true',
-                    dest='prunethreads',
-                    default=False,
-                    help="Prune threaders older than 28 days"),
-        make_option('--pages',
-                    action='store',
-                    type='int',
-                    dest='pages',
-                    default=1,
-                    help='The number of pages of the bazaar to scrape'),
-        make_option('--update_skills',
-                    action='store_true',
-                    dest='update_skills',
-                    default=False,
-                    help='Update the skills of existing characters')
+    help = "Used for scraping the forums and optionally updating skills and corps from the eve api"
 
-    )
+    def add_arguments(self, parser):
+        parser.add_argument('--doskills',
+                            action='store_true',
+                            dest='doskills',
+                            default=False,
+                            help="Update the skill list from the API")
+        parser.add_argument('--scrape_threads',
+                            action='store_true',
+                            dest='scrapethreads',
+                            default=False,
+                            help="Scrape eve threads for characters")
+        parser.add_argument('--prune',
+                            action='store_true',
+                            dest='prunethreads',
+                            default=False,
+                            help="Prune threaders older than 28 days")
+        parser.add_argument('--pages',
+                            action='store',
+                            type=int,
+                            dest='pages',
+                            default=1,
+                            help='The number of pages of the bazaar to scrape')
+        parser.add_argument('--update_skills',
+                            action='store_true',
+                            dest='update_skills',
+                            default=False,
+                            help='Update the skills of existing characters')
 
     def handle(self, *args, **options):
         if options['doskills']:
             grab_skills()
         if options['scrapethreads']:
-            scrape_eveo(options['pages'],options['update_skills'])
+            scrape_eveo(options['pages'], options['update_skills'])
         if options['prunethreads']:
             prune_threads()
 
@@ -97,19 +94,12 @@ def grab_skills():
                     if description.nodeType == 1:
                         description = ''
                     else:
-                        description = skill.getElementsByTagName(
-                            'description')[0].firstChild.nodeValue
+                        description = skill.getElementsByTagName('description')[0].firstChild.nodeValue
                     s.description = description
-                    s.rank = int(
-                        skill.getElementsByTagName('rank')[0].firstChild.nodeValue)
+                    s.rank = int(skill.getElementsByTagName('rank')[0].firstChild.nodeValue)
                     s.groupID = groupID
                     s.groupName = groupName
                     s.save()
-    # dump to static json file
-    dump = open(settings.STATICFILES_DIRS[0] + '/json/skills.json', 'w')
-    serialized = serializers.serialize(
-        "json", Skill.objects.all().order_by('groupName', 'name'))
-    dump.write(serialized)
 
 
 def prune_threads():
@@ -130,8 +120,8 @@ R_POSTID = r't=([0-9]+)'
 R_PILOT_NAME = r"eveboard.com/pilot\/([\w'-]+)"
 R_SKILL_NAME = r"(.+[\w'-]+) / Rank"
 R_SKILL_LEVEL_SP = r"Level: ([0-6]) / SP: ([0-9]+(,[0-9]+)*)"
-RS_PWD = [re.compile(r"[pP]\w*[wW]\w*\s*\w*[=\-\:]*\s*([\w\d]*)"), re.compile(r"[pP][aA][sS]\w*\s*\w*[=\-\:]*\s*([\w\d]*)")]
-#R_PWD = re.compile(r"\w*[pP]\w*[wW]\w*\s*\w*[=]*([\w\d]*)")
+RS_PWD = [re.compile(r"[pP]\w*[wW]\w*\s*\w*[=\-\:]*\s*([\w\d]*)"),
+          re.compile(r"[pP][aA][sS]\w*\s*\w*[=\-\:]*\s*([\w\d]*)")]
 FORUM_URL = 'https://forums.eveonline.com/'
 BAZAAR_URL = 'default.aspx?g=topics&f=277&p=%i'
 THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
@@ -197,11 +187,14 @@ def scrape_standings(charname, password=None):
         security_status = float(ssrow('td')[1].text)
         standings.append(('-Security Status-', security_status))
         # some characters don't have standings available
-        the_tables = soup.findAll('table', attrs={"width": "100%", "border": "0", "cellpadding": "0", "cellspacing": "0"})
+        the_tables = soup.findAll('table',
+                                  attrs={"width": "100%",
+                                         "border": "0",
+                                         "cellpadding": "0",
+                                         "cellspacing": "0"})
         if len(the_tables) == 6:
             for standing_row in the_tables[5].findAll('tr'):
-                standings.append(
-                    (standing_row('td')[1].text, float(standing_row('td')[2].text)))
+                standings.append((standing_row('td')[1].text, float(standing_row('td')[2].text)))
     return standings
 
 
@@ -232,7 +225,8 @@ def scrape_thread(thread):
                 a.extract()
             for img in first_post('img'):
                 img.extract()
-            first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace('</i>', '').replace('<b>', '').replace('</b>', '')
+            first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace(
+                '</i>', '').replace('<b>', '').replace('</b>', '')
             # find them passwords!
             passwords = []
             for regs in RS_PWD:
@@ -249,6 +243,7 @@ def scrape_thread(thread):
     else:
         return None, None
 
+
 STUPID_OLDNAMELOOKUP = {
     'Production Efficiency': 'Material Efficiency',
     'Capital Energy Emission Systems': 'Capital Capacitor Emission Systems'
@@ -264,8 +259,7 @@ def buildchar(charname, skills, standings):
         cs = CharSkill()
         cs.character = char
         if skill[0] in STUPID_OLDNAMELOOKUP:
-            cs.skill = Skill.objects.filter(
-                name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
+            cs.skill = Skill.objects.filter(name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
         else:
             cs.skill = Skill.objects.filter(name=skill[0])[0]
         cs.level = skill[1]
@@ -278,12 +272,11 @@ def buildchar(charname, skills, standings):
             corp = NPC_Corp.objects.get(name=standing[0])
         except ObjectDoesNotExist:
             corp = NPC_Corp.objects.create(name=standing[0])
-            print 'Created new npc corp', standing[0], 'will generate new json dump at end'
+            print 'Created new npc corp', standing[0]
             corp.save()
             global NEW_CORPS
             NEW_CORPS.append(corp)
-        char.standings.add(
-            Standing.objects.create(corp=corp, value=standing[1]))
+        char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
     if standings:
         for corp in NPC_Corp.objects.all():
             try:
@@ -294,7 +287,7 @@ def buildchar(charname, skills, standings):
     return char
 
 
-def scrape_eveo(num_pages,update_skills):
+def scrape_eveo(num_pages, update_skills):
     threads = []
     for x in range(1, num_pages + 1):
         threads.extend(get_bazaar_page(x))
@@ -320,15 +313,14 @@ def scrape_eveo(num_pages,update_skills):
                             cs = CharSkill()
                             cs.character = existing_char
                             if skill[0] in STUPID_OLDNAMELOOKUP:
-                                cs.skill = Skill.objects.filter(
-                                    name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
+                                cs.skill = Skill.objects.filter(name=STUPID_OLDNAMELOOKUP[skill[0]])[0]
                             else:
                                 cs.skill = Skill.objects.filter(name=skill[0])[0]
                             cs.level = skill[1]
                             cs.skill_points = skill[2]
                             cs.save()
                             existing_char.skills.add(cs)
-                            new_sp_total =+ skill[2]
+                            new_sp_total = +skill[2]
                     existing_char.total_sp = new_sp_total
                     existing_char.save()
             existing[0].save()
@@ -357,9 +349,5 @@ def scrape_eveo(num_pages,update_skills):
                 try:
                     char.standings.get(corp=corp)
                 except:
-                    char.standings.add(
-                        Standing.objects.create(corp=corp, value=0))
+                    char.standings.add(Standing.objects.create(corp=corp, value=0))
                     char.save()
-        dump = open(settings.STATICFILES_DIRS[0] + '/json/npc_corps.json', 'w')
-        serialized = serializers.serialize("json", NPC_Corp.objects.all().order_by('name'))
-        dump.write(serialized)

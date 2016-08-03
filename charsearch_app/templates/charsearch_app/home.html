@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load static %}
 {% block title %} Home{% endblock %}
 {% block extra_js %}
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
-<script type="text/javascript" src="/static/javascript/jquery.tablesorter.js"></script> 
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" ></script>
+<script type="text/javascript" src="{% static "charsearch_app/javascript/jquery.tablesorter.js" %}"></script>
 <script>
 	$(document).ready(function(){
 		$("#thread_table").tablesorter({sortList:[[2,1]]});
@@ -12,22 +14,22 @@
 	var skillList = []
 	$.ajax({
 		  type: 'GET',
-		  url: "/static/json/skills.json",
+		  url: "/skills.json",
 		  dataType: 'json',
 		  success: function(data) { skillList = data;},
-		  async: false	
+		  async: true
 		});
 	var npccorpList = []
 	$.ajax({
 		  type: 'GET',
-		  url: "/static/json/npc_corps.json",
+		  url: "/npc_corps.json",
 		  dataType: 'json',
 		  success: function(data) { npccorpList = data;},
-		  async: false	
+		  async: true
 		});
 	var filterList = {{ js_filters|safe }}
 	var counter = 1
-	
+
 	function delself(){
 		parentNode.parentNode.removeChild(parentNode)
 	}
@@ -46,7 +48,7 @@
 				spBox = makeSPBox(counter,filterList[i].sp_million)
 				optionsDiv.appendChild(filterType)
 				optionsDiv.appendChild(opBox)
-				optionsDiv.appendChild(spBox)	
+				optionsDiv.appendChild(spBox)
 			}
 			else if(filterList[i].level_box)
 			{
@@ -93,9 +95,9 @@
 			}
 			counter++
 		}
-		
+
 	}
-	function addFilter() {		
+	function addFilter() {
 		delbutton = makeDelButton()
 		filterType = makeFilterTypeSelect('skill')
 		catBox = makeSkillCatBox(counter,'266')
@@ -107,7 +109,7 @@
 		optionsDiv.appendChild(catBox,optionsDiv.firstChild);
 		optionsDiv.appendChild(skillBox,optionsDiv.firstChild);
 		optionsDiv.appendChild(opBox,optionsDiv.firstChild);
-		optionsDiv.appendChild(levelBox,optionsDiv.firstChild);		
+		optionsDiv.appendChild(levelBox,optionsDiv.firstChild);
 		optionsDiv.setAttribute('filter_number',counter)
 		var div = document.createElement('div');
 		div.insertBefore(document.createElement('br'),div.firstChild);
@@ -129,8 +131,8 @@
 		skillCatSelect.name = "('skill_cat'," + fNumber + ')';
 		skillCatSelect.setAttribute('onChange','onSkillCatChange(this)');
 		var catList = new Array();
-		for (var i = 0; i < skillList.length; i++) 
-		{    			
+		for (var i = 0; i < skillList.length; i++)
+		{
 			if (catList.indexOf(skillList[i]['fields']['groupName']) != -1)
 			{
 				continue;
@@ -148,7 +150,7 @@
 
 				}
 			}
-		} 
+		}
 		return skillCatSelect;
 	}
 	function makeSPBox(fNumber,selected){
@@ -259,7 +261,7 @@
 			else
 			{
 				break
-			} 	
+			}
     	}
     	selectedType = ele.options[ele.selectedIndex].value;
     	if (selectedType == 'sp')
@@ -304,7 +306,7 @@
 		var contains = document.createElement('option');
 		contains.value = 'contains';
 		contains.innerHTML = 'Contains';
-	
+
 		operandSelect.appendChild(exact);
 		operandSelect.appendChild(contains);
 		if (selectedOp == 'exact')
@@ -333,7 +335,7 @@
 		var corpBox = document.createElement('select');
 		corpBox.name = "('corporation_box'," + fNumber + ')';
 		corpBox.setAttribute('filter_number' , fNumber);
-		for (var i = 0; i < npccorpList.length; i++) 
+		for (var i = 0; i < npccorpList.length; i++)
 		{
 			var corpOption = document.createElement('option');
 			corpOption.value = npccorpList[i]['fields']['name'];
@@ -350,7 +352,7 @@
 			{
 				corpOption.selected  = true;
 			}
-		} 
+		}
 		return corpBox;
 	}
 
@@ -381,8 +383,8 @@
 		var skillBox = document.createElement('select');
 		skillBox.name = "('skill_typeID'," + fNumber + ')';
 		skillBox.setAttribute('filter_number' , fNumber);
-		for (var i = 0; i < skillList.length; i++) 
-		{    			
+		for (var i = 0; i < skillList.length; i++)
+		{
 			if (skillList[i]['fields']['groupID'] == groupID)
 			{
 				var skillOption = document.createElement('option');
@@ -394,7 +396,7 @@
 					skillOption.selected  = true;
 				}
 			}
-		} 
+		}
 		return skillBox;
 	}
 
@@ -462,7 +464,7 @@
 		}
 		ele.parentNode.appendChild(makeSkillBox(fNumber,groupID));
 		ele.parentNode.appendChild(makeOperandsBox(fNumber));
-		ele.parentNode.appendChild(makeLevelBox(fNumber));		
+		ele.parentNode.appendChild(makeLevelBox(fNumber));
 
 	}
 
@@ -484,7 +486,7 @@ function sendSearch(){
 ga('send', {
   'hitType': 'event',          // Required.
   'eventCategory': 'Searchbutton',   // Required.
-  'eventAction': 'click',   
+  'eventAction': 'click',
 	})
 }
 
@@ -501,7 +503,7 @@ ga('send', {
  {% endblock %}
 {% block content %}
 </h1>
-	<h1 class='center'>Eve Character Search 0.5</h1>
+	<h1 class='center'>Eve Character Search 0.58</h1>
 
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
@@ -534,7 +536,7 @@ ga('send', {
 				    		{{ thread.last_update|date:"M d, Y h:i A" }}
 				    	</td>
 				    	<td align='center'>
-				        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{{ STATIC_URL }}images/eveboard.jpg" alt='Eveboard link'/></a>
+				        	<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link'/></a>
 				        </td>
 				    </tr>
 			    {% endfor %}
@@ -572,10 +574,15 @@ ga('send', {
 		    <li>Contact <a href="http://www.reddit.com/user/evethrowaway99/">evethrowaway99</a> on reddit if you want to suggest things or report bugs</li>
 		</ul>
 		<h2>Changelog</h2>
+			<h3>03/07/2016 - 0.58</h3>
+				<ul style='text-align:left'>
+					<li>Upgrade to latest Django 1.1</li>
+					<li>Cache skills json rather than using static files</li>
+				</ul>
 			<h3>22/08/2014 - 0.57</h3>
 	    		<ul style='text-align:left'>
-	    			<li>Bugfix for issue reported by <a href=http://www.reddit.com/user/Nimos>Nimos</a> where the scraper would miss skills currently in training</li>	    
-	    			<li>Fix being unable to search for characters with spaces in their names</li>		
+	    			<li>Bugfix for issue reported by <a href=http://www.reddit.com/user/Nimos>Nimos</a> where the scraper would miss skills currently in training</li>
+	    			<li>Fix being unable to search for characters with spaces in their names</li>
 	    		</ul>
 			<h3>15/07/2014 - 0.56</h3>
 	    		<ul style='text-align:left'>
