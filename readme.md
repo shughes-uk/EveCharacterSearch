@@ -13,6 +13,6 @@ ECS leverages [Django][django] and [BeautifulSoup][beautifulsoup].
 
 [mit]:              http://opensource.org/licenses/MIT
 [author]:           http://github.com/shughes-uk
-[contributors]:     https://github.com/shughes-uk/EveCharacer/graphs/contributors
+[contributors]:     https://github.com/shughes-uk/EveCharacterSearch/graphs/contributors
 [django]:           https://github.com/django/django
 [beautifulsoup]:    https://www.crummy.com/software/BeautifulSoup/
