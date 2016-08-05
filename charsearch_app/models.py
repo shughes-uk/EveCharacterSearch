@@ -8,6 +8,8 @@ class Character(models.Model):
     skills = models.ManyToManyField('CharSkill', related_name='learned_by')
     total_sp = models.BigIntegerField()
     standings = models.ManyToManyField('Standing', related_name='standing_to')
+    last_update = models.DateTimeField()
+    password = models.CharField(max_length=64)
 
 
 class NPC_Corp(models.Model):
