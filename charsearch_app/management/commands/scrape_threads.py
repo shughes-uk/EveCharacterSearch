@@ -104,6 +104,8 @@ def scrape_eveo(num_pages):
                     t.blacklisted = False
                     character = buildchar(charname, skills, standings)
                     t.character = character
+                    character.password = password
+                    character.save()
                     t.save()
                 else:
                     t.blacklisted = True
