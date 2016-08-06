@@ -10,7 +10,7 @@ from django.utils.timezone import now
 
 from _utils import logger as utils_logger
 from _utils import buildchar, scrape_skills, scrape_standings
-from charsearch_app.models import Thread
+from charsearch_app.models import Thread, ThreadTitle
 
 logger = logging.getLogger("charsearch.scrape_threads")
 
@@ -46,8 +46,8 @@ class Command(BaseCommand):
 
 R_POSTID = r't=([0-9]+)'
 R_PILOT_NAME = r"eveboard.com/pilot\/([\w'-]+)"
-RS_PWD = [re.compile(r"[pP]\w*[wW]\w*\s*\w*[=\-\:]*\s*([\w\d]*)"),
-          re.compile(r"[pP][aA][sS]\w*\s*\w*[=\-\:]*\s*([\w\d]*)")]
+RS_PWD = [re.compile(r"[pP][wW][\w]*\s*[=\-\:]*\s*([\w]*)"),
+          re.compile(r"[pP][aA][sS][\w]*\s*[=\-\:]*\s*([\w]*)")]
 FORUM_URL = 'https://forums.eveonline.com/'
 BAZAAR_URL = 'default.aspx?g=topics&f=277&p=%i'
 THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
@@ -59,7 +59,7 @@ def get_bazaar_page(pagenumber):
     soup = BeautifulSoup(html)
     threads = []
     for thread_soup in soup.findAll('tr', attrs={'class': ['topicRow post', 'topicRow_Alt post_alt']}):
-        title_soup = thread_soup.find('a', attrs={'class': ['main nonew', 'main topic_new']})
+        title_soup = thread_soup.find('a', attrs={'class': ['main nonew', 'main topic_new', 'main locked']})
         title = title_soup.string
         threadID = re.search(R_POSTID, title_soup['href']).group(1)
         last_post_str = thread_soup.find('td', attrs={'class': 'topicLastPost smallfont'}).next
@@ -95,6 +95,7 @@ def scrape_thread(thread):
                     logger.debug("Found eveboard password {0}".format(match.group(1)))
                     passwords.append(match.group(1))
         if passwords:
+            passwords.append('1234') # append the most commonly used password
             for password in passwords:
                 skills = scrape_skills(pilot_name, password)
                 if skills:
@@ -114,18 +115,22 @@ def scrape_eveo(num_pages):
     for x in range(1, num_pages + 1):
         threads.extend(get_bazaar_page(x))
     for thread in threads:
-        existing = Thread.objects.filter(thread_id=thread['threadID'])
-        if len(existing) > 0:
-            existing[0].last_update = thread['lastPost']
-            existing[0].thread_title = thread['title']
-            existing[0].save()
-            continue
+        existing_thread = Thread.objects.filter(thread_id=thread['threadID']).first()
+        if existing_thread:
+            if existing_thread.last_update != thread['lastPost']:
+                existing_thread.last_update = thread['lastPost']
+            if existing_thread.thread_title != thread['title']:
+                old_title = ThreadTitle(title=thread['title'], date=now())
+                old_title.save()
+                existing_thread.title_history.add(old_title)
+                existing_thread.thread_title = thread['title']
+            existing_thread.save()
         else:
-            t = Thread()
-            t.thread_id = thread['threadID']
-            t.last_update = thread['lastPost']
-            t.thread_text = ''
-            t.thread_title = thread['title']
+            t = Thread(
+                thread_id=thread['threadID'],
+                last_update=thread['lastPost'],
+                thread_text='',
+                thread_title=thread['title'])
             charname, skills, password = scrape_thread(thread)
             if skills:
                 standings = scrape_standings(charname, password)

@@ -44,3 +44,9 @@ class Thread(models.Model):
     thread_title = models.CharField(max_length=100)
     thread_id = models.IntegerField()
     character = models.ForeignKey(Character, null=True)
+    title_history = models.ManyToManyField('ThreadTitle', related_name='previous_titles')
+
+
+class ThreadTitle(models.Model):
+    title = models.CharField(max_length=500)
+    date = models.DateTimeField()
