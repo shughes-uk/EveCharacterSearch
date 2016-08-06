@@ -77,7 +77,7 @@ class Command(BaseCommand):
                         cs.skill_points = skill[2]
                         cs.save()
                         character.skills.add(cs)
-                        new_sp_total = +skill[2]
+                        new_sp_total += skill[2]
                 character.total_sp = new_sp_total
                 character.last_update = now()
                 character.save()

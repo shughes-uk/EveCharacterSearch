@@ -7,7 +7,8 @@ from BeautifulSoup import BeautifulSoup
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
-from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing)
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill,
+                                   Standing)
 
 logger = logging.getLogger("charsearch.utils")
 STUPID_OLDNAMELOOKUP = {
@@ -96,7 +97,7 @@ def scrape_skills(charname, password=None):
                 level = int(level_sp.group(1))
                 sp = int(level_sp.group(2).replace(',', ''))
                 skills.append((skill_name, level, sp))
-        logger.debug("Scraping eveboard for {0} suceeded, have {1} skills".format(charname, len(skills)))
+        logger.debug("Scraping eveboard for {0} finished, have {1} skills".format(charname, len(skills)))
         return skills
     else:
         logger.debug("Scraping eveboard for {0} failed".format(charname))

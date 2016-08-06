@@ -3,7 +3,9 @@ import re
 import urllib2
 
 from BeautifulSoup import BeautifulSoup
+from dateutil import parser
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 from django.utils.timezone import now
 
 from _utils import logger as utils_logger
@@ -56,10 +58,14 @@ def get_bazaar_page(pagenumber):
     html = urllib2.urlopen(FORUM_URL + BAZAAR_URL % pagenumber).read()
     soup = BeautifulSoup(html)
     threads = []
-    for x in soup.findAll('a', attrs={'class': 'main nonew'}):
-        title = x.string
-        threadID = re.search(R_POSTID, x['href']).group(1)
-        threads.append({'title': title, 'threadID': int(threadID)})
+    for thread_soup in soup.findAll('tr', attrs={'class': ['topicRow post', 'topicRow_Alt post_alt']}):
+        title_soup = thread_soup.find('a', attrs={'class': ['main nonew', 'main topic_new']})
+        title = title_soup.string
+        threadID = re.search(R_POSTID, title_soup['href']).group(1)
+        last_post_str = thread_soup.find('td', attrs={'class': 'topicLastPost smallfont'}).next
+        last_post_dt = parser.parse(last_post_str)
+        last_post_dt = timezone.make_aware(last_post_dt, timezone.get_current_timezone())
+        threads.append({'title': title, 'threadID': int(threadID), 'lastPost': last_post_dt})
         logger.debug("Found thread title : {0} | threadID : {1}".format(title.rstrip(), threadID))
     return threads
 
@@ -110,14 +116,14 @@ def scrape_eveo(num_pages):
     for thread in threads:
         existing = Thread.objects.filter(thread_id=thread['threadID'])
         if len(existing) > 0:
-            existing[0].last_update = now()
+            existing[0].last_update = thread['lastPost']
             existing[0].thread_title = thread['title']
             existing[0].save()
             continue
         else:
             t = Thread()
             t.thread_id = thread['threadID']
-            t.last_update = now()
+            t.last_update = thread['lastPost']
             t.thread_text = ''
             t.thread_title = thread['title']
             charname, skills, password = scrape_thread(thread)
