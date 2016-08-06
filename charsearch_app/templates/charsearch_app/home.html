@@ -512,6 +512,21 @@ ga('send', {
 	 </form>
 	<br>
 	{% if threads %}
+			<div class="center">
+				<span class="step-links">
+					{% if threads.has_previous %}
+						<a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
+					{% endif %}
+
+					<span class="current">
+						Page {{ threads.number }} of {{ threads.paginator.num_pages }}
+					</span>
+
+					{% if threads.has_next %}
+						<a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
+					{% endif %}
+				</span>
+			</div>
 			<table id="thread_table" class='center'>
 				<thead>
 				<tr>
