@@ -9,7 +9,7 @@ class Character(models.Model):
     total_sp = models.BigIntegerField()
     standings = models.ManyToManyField('Standing', related_name='standing_to')
     last_update = models.DateTimeField()
-    password = models.CharField(max_length=64)
+    password = models.CharField(max_length=64, blank=True)
 
 
 class NPC_Corp(models.Model):

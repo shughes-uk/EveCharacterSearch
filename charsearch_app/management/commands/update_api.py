@@ -1,3 +1,4 @@
+import logging
 import urllib
 from xml.dom.minidom import parseString
 
@@ -5,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 from charsearch_app.models import Skill
 
+logger = logging.getLogger("charsearch.update_api")
 api_site = 'https://api.eveonline.com'
 skill_tree = '/eve/SkillTree.xml.aspx'
 
@@ -13,6 +15,15 @@ class Command(BaseCommand):
     help = "Used for scraping the forums and optionally updating skills and corps from the eve api"
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity')
+        if verbosity == 0:
+            logger.setLevel(logging.WARN)
+        elif verbosity == 1:  # default
+            logger.setLevel(logging.INFO)
+        elif verbosity > 1:
+            logger.setLevel(logging.DEBUG)
+        if verbosity > 2:
+            logger.setLevel(logging.DEBUG)
         grab_skills()
 
 

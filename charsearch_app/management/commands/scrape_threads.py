@@ -1,14 +1,16 @@
+import logging
 import re
 import urllib2
-from datetime import datetime
 
 from BeautifulSoup import BeautifulSoup
 from django.core.management.base import BaseCommand
+from django.utils.timezone import now
 
-from _utils import buildchar, password_test, scrape_skills, scrape_standings
-from charsearch_app.models import Character, Standing, Thread
+from _utils import logger as utils_logger
+from _utils import buildchar, scrape_skills, scrape_standings
+from charsearch_app.models import Thread
 
-NEW_CORPS = []
+logger = logging.getLogger("charsearch.scrape_threads")
 
 
 class Command(BaseCommand):
@@ -24,6 +26,19 @@ class Command(BaseCommand):
             help='The number of pages of the bazaar to scrape')
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity')
+        if verbosity == 0:
+            utils_logger.setLevel(logging.WARN)
+            logger.setLevel(logging.WARN)
+        elif verbosity == 1:  # default
+            utils_logger.setLevel(logging.INFO)
+            logger.setLevel(logging.INFO)
+        elif verbosity > 1:
+            utils_logger.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
+        if verbosity > 2:
+            utils_logger.setLevel(logging.DEBUG)
+            logger.setLevel(logging.DEBUG)
         scrape_eveo(options['pages'])
 
 
@@ -37,6 +52,7 @@ THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
 
 
 def get_bazaar_page(pagenumber):
+    logger.debug("Scraping grabbing bazaar page {0}".format(pagenumber))
     html = urllib2.urlopen(FORUM_URL + BAZAAR_URL % pagenumber).read()
     soup = BeautifulSoup(html)
     threads = []
@@ -44,39 +60,47 @@ def get_bazaar_page(pagenumber):
         title = x.string
         threadID = re.search(R_POSTID, x['href']).group(1)
         threads.append({'title': title, 'threadID': int(threadID)})
+        logger.debug("Found thread title : {0} | threadID : {1}".format(title.rstrip(), threadID))
     return threads
 
 
 def scrape_thread(thread):
+    logger.debug("Scraping thread {0}".format(thread))
     html = urllib2.urlopen(FORUM_URL + THREAD_URL % thread['threadID']).read()
     thread_soup = BeautifulSoup(html)
     first_post = thread_soup.findAll('div', attrs={'id': 'forum_ctl00_MessageList_ctl00_DisplayPost1_MessagePost1'})[0]
     eveboard_link = first_post.find('a', href=re.compile('.*eveboard.com/pilot/.*'))
     if eveboard_link:
+        logger.debug("Found eveboard link {0}".format(eveboard_link))
         pilot_name = eveboard_link['href'].split('/pilot/')[1]
-        if password_test(pilot_name):
-            # clean up tags and bbcode
-            for a in first_post('a'):
-                a.extract()
-            for img in first_post('img'):
-                img.extract()
-            first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace(
-                '</i>', '').replace('<b>', '').replace('</b>', '')
-            # find them passwords!
-            passwords = []
-            for regs in RS_PWD:
-                potential_passwords = regs.finditer(first_post)
-                for match in potential_passwords:
-                    if match.group(1) not in passwords:
-                        passwords.append(match.group(1))
+        # clean up tags and bbcode
+        for a in first_post('a'):
+            a.extract()
+        for img in first_post('img'):
+            img.extract()
+        first_post = first_post.prettify().replace('<br />', ' ').replace('\n', '').replace('<i>', '').replace(
+            '</i>', '').replace('<b>', '').replace('</b>', '')
+        # find them passwords!
+        passwords = []
+        for regs in RS_PWD:
+            potential_passwords = regs.finditer(first_post)
+            for match in potential_passwords:
+                if match.group(1) not in passwords:
+                    logger.debug("Found eveboard password {0}".format(match.group(1)))
+                    passwords.append(match.group(1))
+        if passwords:
             for password in passwords:
-                if not password_test(pilot_name, password):
-                    return pilot_name, password
-            return None, None
+                skills = scrape_skills(pilot_name, password)
+                if skills:
+                    return pilot_name, skills, password
+            logger.debug("Password didin't work trying without")
+            return pilot_name, scrape_skills(pilot_name), None
         else:
-            return pilot_name, None
+            logger.debug("No passwords found trying without")
+            return pilot_name, scrape_skills(pilot_name), None
     else:
-        return None, None
+        logger.debug("Could not find eveboard link")
+        return None, None, None
 
 
 def scrape_eveo(num_pages):
@@ -86,35 +110,25 @@ def scrape_eveo(num_pages):
     for thread in threads:
         existing = Thread.objects.filter(thread_id=thread['threadID'])
         if len(existing) > 0:
-            existing[0].last_update = datetime.now()
+            existing[0].last_update = now()
             existing[0].thread_title = thread['title']
             existing[0].save()
             continue
         else:
-            charname, password = scrape_thread(thread)
-            if charname:
-                skills = scrape_skills(charname, password)
+            t = Thread()
+            t.thread_id = thread['threadID']
+            t.last_update = now()
+            t.thread_text = ''
+            t.thread_title = thread['title']
+            charname, skills, password = scrape_thread(thread)
+            if skills:
                 standings = scrape_standings(charname, password)
-                t = Thread()
-                t.thread_id = thread['threadID']
-                t.last_update = datetime.now()
-                t.thread_text = ''
-                t.thread_title = thread['title']
-                if skills:
-                    t.blacklisted = False
-                    character = buildchar(charname, skills, standings)
-                    t.character = character
-                    character.password = password
-                    character.save()
-                    t.save()
-                else:
-                    t.blacklisted = True
-                    t.save()
-    if NEW_CORPS:
-        for char in Character.objects.all():
-            for corp in NEW_CORPS:
-                try:
-                    char.standings.get(corp=corp)
-                except:
-                    char.standings.add(Standing.objects.create(corp=corp, value=0))
-                    char.save()
+                logger.debug("Got character for thread".format(thread))
+                t.blacklisted = False
+                character = buildchar(charname, skills, standings, password)
+                t.character = character
+                t.save()
+            else:
+                logger.debug("Failed to get character for thread, blacklisting".format(thread))
+                t.blacklisted = True
+                t.save()

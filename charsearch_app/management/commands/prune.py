@@ -1,8 +1,11 @@
+import logging
 from datetime import datetime, timedelta
 
 from django.core.management.base import BaseCommand
 
 from charsearch_app.models import Thread
+
+logger = logging.getLogger("charsearch.prune")
 
 
 class Command(BaseCommand):
@@ -18,6 +21,16 @@ class Command(BaseCommand):
             help='Prune threads older than this (measured in days)')
 
     def handle(self, *args, **options):
+        verbosity = options.get('verbosity')
+        if verbosity == 0:
+            logger.setLevel(logging.WARN)
+        elif verbosity == 1:  # default
+            logger.setLevel(logging.INFO)
+        elif verbosity > 1:
+            logger.setLevel(logging.DEBUG)
+        if verbosity > 2:
+            logger.setLevel(logging.DEBUG)
+
         self.prune_threads(options['days'])
 
     def prune_threads(days):
