@@ -91,11 +91,6 @@ table tr:last-child td:last-child {
 	border-bottom-right-radius:15px;
 }
 
-table tr:first-child td:last-child {
-	-moz-border-radius-topright:15px;
-	-webkit-border-top-right-radius:15px;
-	border-top-right-radius:15px;
-}
 table tr:last-child td:first-child{
 	-moz-border-radius-bottomleft:15px;
 	-webkit-border-bottom-left-radius:15px;
