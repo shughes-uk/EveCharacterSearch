@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.utils.timezone import now
 
 from _utils import logger as utils_logger
-from _utils import STUPID_OLDNAMELOOKUP, scrape_skills
+from _utils import STUPID_OLDNAMELOOKUP, scrape_character
 from charsearch_app.models import Character, CharSkill, Skill, Thread
 
 logger = logging.getLogger("charsearch.refresh_characters")
@@ -56,10 +56,10 @@ class Command(BaseCommand):
             Q(last_update__lte=staledate) | Q(last_update=None), thread__in=updated_threads)
         for character in stale_characters:
             logger.debug("Updating stale character %s" % character.name)
-            skills = scrape_skills(character.name, character.password)
-            if skills:
+            scraped_info = scrape_character(character.name, character.password)
+            if scraped_info:
                 new_sp_total = 0
-                for skill in skills:
+                for skill in scraped_info['skills']:
                     existing_skill = character.skills.filter(skill__name=skill[0])
                     if len(existing_skill) > 0:
                         existing_skill[0].skill_points = skill[2]
@@ -78,6 +78,8 @@ class Command(BaseCommand):
                         cs.save()
                         character.skills.add(cs)
                         new_sp_total += skill[2]
+                character.remaps = scraped_info['stats']['remaps']
+                character.unspent_skillpoints = scraped_info['stats']['unallocated_sp']
                 character.total_sp = new_sp_total
                 character.last_update = now()
                 character.save()

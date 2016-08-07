@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 
 from _utils import logger as utils_logger
-from _utils import buildchar, scrape_skills, scrape_standings
+from _utils import buildchar, scrape_character
 from charsearch_app.models import Thread, ThreadTitle
 
 logger = logging.getLogger("charsearch.scrape_threads")
@@ -46,8 +46,7 @@ class Command(BaseCommand):
 
 R_POSTID = r't=([0-9]+)'
 R_PILOT_NAME = r"eveboard.com/pilot\/([\w'-]+)"
-RS_PWD = [re.compile(r"[pP][wW][\w]*\s*[=\-\:]*\s*([\w]*)"),
-          re.compile(r"[pP][aA][sS][\w]*\s*[=\-\:]*\s*([\w]*)")]
+RS_PWD = [re.compile(r"[pP][wW][\w]*\s*[=\-\:]*\s*([\w]*)"), re.compile(r"[pP][aA][sS][\w]*\s*[=\-\:]*\s*([\w]*)")]
 FORUM_URL = 'https://forums.eveonline.com/'
 BAZAAR_URL = 'default.aspx?g=topics&f=277&p=%i'
 THREAD_URL = 'default.aspx?g=posts&t=%i&find=unread'
@@ -95,19 +94,31 @@ def scrape_thread(thread):
                     logger.debug("Found eveboard password {0}".format(match.group(1)))
                     passwords.append(match.group(1))
         if passwords:
-            passwords.append('1234') # append the most commonly used password
+            passwords.append('1234')  # append the most commonly used password
             for password in passwords:
-                skills = scrape_skills(pilot_name, password)
-                if skills:
-                    return pilot_name, skills, password
+                scraped_info = scrape_character(pilot_name, password)
+                if scraped_info:
+                    scraped_info.update({'charname': pilot_name, 'password': password})
+                    return scraped_info
             logger.debug("Password didin't work trying without")
-            return pilot_name, scrape_skills(pilot_name), None
+            scraped_info = scrape_character(pilot_name, None)
+            if scraped_info:
+                scraped_info.update({'charname': pilot_name, 'password': None})
+                return scraped_info
+            else:
+                return None
         else:
             logger.debug("No passwords found trying without")
-            return pilot_name, scrape_skills(pilot_name), None
+            scraped_info = scrape_character(pilot_name, None)
+            if scraped_info:
+                scraped_info.update({'charname': pilot_name, 'password': None})
+                return scraped_info
+            else:
+                return None
+
     else:
         logger.debug("Could not find eveboard link")
-        return None, None, None
+        return None
 
 
 def scrape_eveo(num_pages):
@@ -131,12 +142,11 @@ def scrape_eveo(num_pages):
                 last_update=thread['lastPost'],
                 thread_text='',
                 thread_title=thread['title'])
-            charname, skills, password = scrape_thread(thread)
-            if skills:
-                standings = scrape_standings(charname, password)
-                logger.debug("Got character for thread".format(thread))
+            char_dict = scrape_thread(thread)
+            if char_dict:
+                logger.debug("Got character for thread {0}".format(thread['threadID']))
                 t.blacklisted = False
-                character = buildchar(charname, skills, standings, password)
+                character = buildchar(char_dict)
                 t.character = character
                 t.save()
             else:

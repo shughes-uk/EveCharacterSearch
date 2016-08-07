@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.timezone import now
 
 
 class Character(models.Model):
@@ -8,8 +9,10 @@ class Character(models.Model):
     skills = models.ManyToManyField('CharSkill', related_name='learned_by')
     total_sp = models.BigIntegerField()
     standings = models.ManyToManyField('Standing', related_name='standing_to')
-    last_update = models.DateTimeField()
+    last_update = models.DateTimeField(default=now)
     password = models.CharField(max_length=64, blank=True)
+    unspent_skillpoints = models.IntegerField(default=0)
+    remaps = models.IntegerField(default=0)
 
 
 class NPC_Corp(models.Model):
@@ -38,7 +41,7 @@ class CharSkill(models.Model):
 
 
 class Thread(models.Model):
-    last_update = models.DateTimeField()
+    last_update = models.DateTimeField(default=now)
     blacklisted = models.BooleanField()
     thread_text = models.CharField(max_length=6000, null=True)
     thread_title = models.CharField(max_length=100)
@@ -49,4 +52,4 @@ class Thread(models.Model):
 
 class ThreadTitle(models.Model):
     title = models.CharField(max_length=500)
-    date = models.DateTimeField()
+    date = models.DateTimeField(default=now)

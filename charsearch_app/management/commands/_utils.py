@@ -1,3 +1,4 @@
+import locale
 import logging
 import re
 import urllib
@@ -21,13 +22,13 @@ R_SKILL_LEVEL_SP = r"Level: ([0-6]) / SP: ([0-9]+(,[0-9]+)*)"
 EVEBOARD_URL = 'http://eveboard.com/pilot/%s'
 
 
-def buildchar(charname, skills, standings, password):
-    logger.debug("Building new character, %s" % charname)
+def buildchar(char_dict):
+    logger.debug("Building new character, %s" % char_dict['charname'])
     char = Character()
-    char.name = charname
+    char.name = char_dict['charname']
     char.total_sp = 0
     char.save()
-    for skill in skills:
+    for skill in char_dict['skills']:
         cs = CharSkill()
         cs.character = char
         if skill[0] in STUPID_OLDNAMELOOKUP:
@@ -40,7 +41,7 @@ def buildchar(charname, skills, standings, password):
         logger.debug("Created CharSkill for {0}".format(skill))
         char.skills.add(cs)
         char.total_sp += skill[2]
-    for standing in standings:
+    for standing in char_dict['standings']:
         try:
             corp = NPC_Corp.objects.get(name=standing[0])
         except ObjectDoesNotExist:
@@ -56,80 +57,108 @@ def buildchar(charname, skills, standings, password):
                     char.save()
 
         char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
-    if standings:
+    if char_dict['standings']:
         for corp in NPC_Corp.objects.all():
             try:
                 char.standings.get(corp=corp)
             except ObjectDoesNotExist:
                 char.standings.add(Standing.objects.create(corp=corp, value=0))
     char.last_update = now()
-    char.password = password
+    char.unspent_skillpoints = char_dict['stats']['unallocated_sp']
+    char.remaps = char_dict['stats']['remaps']
+    char.password = char_dict['password']
     char.save()
-    logger.debug("Character built {0}".format(charname))
+    logger.debug("Character built {0}".format(char_dict['charname']))
     return char
 
 
-def scrape_skills(charname, password=None):
+def scrape_character(charname, password=None):
     logger.debug("Scraping eveboard skills for {0}".format(charname))
-    soup = try_get_soup_main(charname, password=password)
-    if soup:
-        # grab all the skill rows
-        skills = []
-        for x in soup.findAll('td', attrs={'class': 'dotted', 'height': 20}):
-            spans = x.findAll('span')
-            if len(spans) == 1:  # max level  skills
-                contents = spans[0].string.strip()
-            elif len(spans) == 2:  # skill currently in training have two spans
-                contents = spans[0].string.strip()
-            elif len(
-                    spans) == 3:  # skill currently in training and also max rank have three spans, not sure how this is possible but it is
-                contents = spans[1].string.strip()
-            elif x.string:  # non max rank skills
-                contents = x.string.strip()
+    main_soup = try_get_soup_main(charname, password=password)
+    if main_soup:
+        # grab all the skills
+        skills = parse_skills(main_soup)
+        if skills:
+            stats = parse_stat_table(main_soup)
+            logger.debug("Scraping eveboard for {0} finished, have {1} skills".format(charname, len(skills)))
+            logger.debug("Scraping eveboard standings for {0}".format(charname))
+            standing_soup = try_get_soup_standings(charname, password=password)
+            standings = parse_standings(standing_soup)
+            if standings:
+                logger.debug("Parsing standings for {0} suceeded".format(charname))
+                return {'skills': skills, 'standings': standings, 'stats': stats}
             else:
-                logger.warn("Found an eveboard skill td we couldn't parse")
-                logger.warn(str(x))
-                contents = ''
-            skill_match = re.search(R_SKILL_NAME, contents)
-            if skill_match:
-                skill_name = skill_match.group(1)
-                level_sp = re.search(R_SKILL_LEVEL_SP, contents)
-                level = int(level_sp.group(1))
-                sp = int(level_sp.group(2).replace(',', ''))
-                skills.append((skill_name, level, sp))
-        logger.debug("Scraping eveboard for {0} finished, have {1} skills".format(charname, len(skills)))
-        return skills
+                logger.debug("Parsing standings for {0} failed".format(charname))
+                return None
     else:
         logger.debug("Scraping eveboard for {0} failed".format(charname))
         return None
 
 
-def scrape_standings(charname, password=None):
+def parse_stat_table(soup):
+    stat_table_soup = soup.find('td', attrs={'class': "title"}).findParent('table')
+    unallocated_sp_str = stat_table_soup.find('td', text='Unallocated').findNext('td').text
+    unallocated_sp_str = unallocated_sp_str.replace(',','')
+    if unallocated_sp_str:
+        unallocated_sp = locale.atoi(unallocated_sp_str)
+    else:
+        unallocated_sp = 0
+    remaps_str = stat_table_soup.find('td', text='Remaps').findNext('td').text
+    if remaps_str:
+        remaps = locale.atoi(unallocated_sp_str)
+    else:
+        remaps = 0
+    return {'unallocated_sp': unallocated_sp, 'remaps': remaps}
+
+
+def parse_skills(skill_soup):
+    skills = []
+    for x in skill_soup.findAll('td', attrs={'class': 'dotted', 'height': 20}):
+        spans = x.findAll('span')
+        if len(spans) == 1:  # max level  skills
+            contents = spans[0].string.strip()
+        elif len(spans) == 2:  # skill currently in training have two spans
+            contents = spans[0].string.strip()
+        elif len(
+                spans) == 3:  # skill currently in training and also max rank have three spans, not sure how this is possible but it is
+            contents = spans[1].string.strip()
+        elif x.string:  # non max rank skills
+            contents = x.string.strip()
+        else:
+            logger.warn("Found an eveboard skill td we couldn't parse")
+            logger.warn(str(x))
+            contents = ''
+        skill_match = re.search(R_SKILL_NAME, contents)
+        if skill_match:
+            skill_name = skill_match.group(1)
+            level_sp = re.search(R_SKILL_LEVEL_SP, contents)
+            level = int(level_sp.group(1))
+            sp = int(level_sp.group(2).replace(',', ''))
+            skills.append((skill_name, level, sp))
+    return skills
+
+
+def parse_standings(standing_soup):
     standings = []
-    logger.debug("Scraping eveboard standings for {0}".format(charname))
-    soup = try_get_soup_standings(charname, password=password)
-    if soup:
-        # grab security status
-        ssrow = soup.find('td', text='Security Status')
-        if ssrow:
-            ssrow = ssrow.parent.parent
-            # rip out a span that messes things up
-            ssrow.span.extract()
-            security_status = float(ssrow('td')[1].text)
-            standings.append(('-Security Status-', security_status))
-            # some characters don't have standings available
-            the_tables = soup.findAll(
-                'table', attrs={"width": "100%",
-                                "border": "0",
-                                "cellpadding": "0",
-                                "cellspacing": "0"})
-            if len(the_tables) == 6:
-                for standing_row in the_tables[5].findAll('tr'):
-                    standings.append((standing_row('td')[1].text, float(standing_row('td')[2].text)))
-        logger.debug("Scraping eveboard skills for {0} suceeded".format(charname))
+    # grab security status
+    ssrow = standing_soup.find('td', text='Security Status')
+    if ssrow:
+        ssrow = ssrow.parent.parent
+        # rip out a span that messes things up
+        ssrow.span.extract()
+        security_status = float(ssrow('td')[1].text)
+        standings.append(('-Security Status-', security_status))
+        # some characters don't have standings available
+        the_tables = standing_soup.findAll(
+            'table', attrs={"width": "100%",
+                            "border": "0",
+                            "cellpadding": "0",
+                            "cellspacing": "0"})
+        if len(the_tables) == 6:
+            for standing_row in the_tables[5].findAll('tr'):
+                standings.append((standing_row('td')[1].text, float(standing_row('td')[2].text)))
         return standings
     else:
-        logger.debug("Scraping eveboard skills for {0} failed".format(charname))
         return None
 
 
