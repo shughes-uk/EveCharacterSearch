@@ -8,7 +8,8 @@ from BeautifulSoup import BeautifulSoup
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
-from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing)
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill,
+                                   Standing)
 
 logger = logging.getLogger("charsearch.utils")
 STUPID_OLDNAMELOOKUP = {
@@ -82,13 +83,18 @@ def scrape_character(charname, password=None):
             logger.debug("Scraping eveboard for {0} finished, have {1} skills".format(charname, len(skills)))
             logger.debug("Scraping eveboard standings for {0}".format(charname))
             standing_soup = try_get_soup_standings(charname, password=password)
-            standings = parse_standings(standing_soup)
-            if standings:
-                logger.debug("Parsing standings for {0} suceeded".format(charname))
-                return {'skills': skills, 'standings': standings, 'stats': stats}
+            if standing_soup:
+                standings = parse_standings(standing_soup)
+                if standings:
+                    logger.debug("Parsing standings for {0} suceeded".format(charname))
+                    return {'skills': skills, 'standings': standings, 'stats': stats}
+                else:
+                    logger.debug("Got skills but couldn't get standings for {0}".format(charname))
+                    return {'skills': skills, 'standings': [], 'stats': stats}
+
             else:
-                logger.debug("Parsing standings for {0} failed".format(charname))
-                return None
+                logger.debug("Got skills but couldn't get standings for {0}".format(charname))
+                return {'skills': skills, 'standings': [], 'stats': stats}
     else:
         logger.debug("Scraping eveboard for {0} failed".format(charname))
         return None
