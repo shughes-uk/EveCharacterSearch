@@ -503,7 +503,7 @@ ga('send', {
  {% endblock %}
 {% block content %}
 </h1>
-	<h1 class='center'>Eve Character Search 0.58</h1>
+	<h1 class='center'>Eve Character Search 0.6</h1>
 
 	 <form class='center' name='filters' method='post'>
 	 	{% csrf_token %}
@@ -597,10 +597,15 @@ ga('send', {
 		    <li>Check out the project on <a href="https://github.com/shughes-uk/EveCharacterSearch">GitHub</a> if you want to contribute issues or pull requests</li>
 		</ul>
 		<h2>Changelog</h2>
-			<h3>00/00/0000 - 0.6</h3>
+			<h3>07/08/2016 - 0.6</h3>
 				<ul style='text-align:left'>
 					<li>Fix eveboard link</li>
-
+					<li>Fixing highlight of first tablerow</li>
+					<li>Pagination arrows at the top of the page</li>
+					<li>'last seen' is now based on the last post in the thread</li>
+					<li>Recording more data internally from eveboard for future updates</li>
+					<li>Large amounts of internal refactoring of code</li>
+				</ul>
 			<h3>03/07/2016 - 0.58</h3>
 				<ul style='text-align:left'>
 					<li>Upgrade to latest Django 1.1</li>
