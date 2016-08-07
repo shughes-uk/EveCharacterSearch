@@ -8,8 +8,7 @@ from BeautifulSoup import BeautifulSoup
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
-from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill,
-                                   Standing)
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing)
 
 logger = logging.getLogger("charsearch.utils")
 STUPID_OLDNAMELOOKUP = {
@@ -66,7 +65,7 @@ def buildchar(char_dict):
     char.last_update = now()
     char.unspent_skillpoints = char_dict['stats']['unallocated_sp']
     char.remaps = char_dict['stats']['remaps']
-    char.password = char_dict['password']
+    char.password = char_dict['password'] or ''
     char.save()
     logger.debug("Character built {0}".format(char_dict['charname']))
     return char
@@ -98,7 +97,7 @@ def scrape_character(charname, password=None):
 def parse_stat_table(soup):
     stat_table_soup = soup.find('td', attrs={'class': "title"}).findParent('table')
     unallocated_sp_str = stat_table_soup.find('td', text='Unallocated').findNext('td').text
-    unallocated_sp_str = unallocated_sp_str.replace(',','')
+    unallocated_sp_str = unallocated_sp_str.replace(',', '')
     if unallocated_sp_str:
         unallocated_sp = locale.atoi(unallocated_sp_str)
     else:
