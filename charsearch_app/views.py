@@ -6,9 +6,9 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from django.views.decorators.csrf import csrf_exempt
 
 from charsearch_app.models import Character, NPC_Corp, Skill, Thread
-from django.views.decorators.csrf import csrf_exempt
 
 R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
@@ -33,7 +33,7 @@ def index(request):
     if len(request.GET) > 0:
         filters = getFilters(request.GET)
     else:
-        filters = request.session.get('filters', default=[])
+        filters = []
     if filters:
         results = applyFilters(filters)
     else:
@@ -51,7 +51,6 @@ def index(request):
         except EmptyPage:
             threads = paginator.page(paginator.num_pages)
         context['threads'] = threads
-    request.session['filters'] = filters
     context['js_filters'] = simplejson.dumps(filters)
     return render(request, 'charsearch_app/home.html', context)
 
