@@ -505,8 +505,7 @@ ga('send', {
 </h1>
 	<h1 class='center'>Eve Character Search 0.6</h1>
 
-	 <form class='center' name='filters' method='post' action='/'>
-	 	{% csrf_token %}
+	 <form class='center' name='filters' method='get' action='/'>
 	 	<div class='center'><button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button></div>
 	 	<input type='submit' onclick='sendSearch()'value='Search'/>
 	 </form>
@@ -551,15 +550,9 @@ ga('send', {
 				    		{{ thread.last_update|date:"M d, Y h:i A" }}
 				    	</td>
 				    	<td align='center'>
-						    <div class="foo" style="
-						        border-radius: 5px;
-						        background-color: #212227;
-						        width: 80%;
-						        margin-left: auto;
-						        margin-right: auto;
-						        padding: 4px;
-						    ">
-    						<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);"></a></div>
+						    <div class="eveboard_div">
+    							<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);"></a>
+							</div>
 				        </td>
 				    </tr>
 			    {% endfor %}

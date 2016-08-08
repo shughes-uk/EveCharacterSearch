@@ -8,6 +8,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 
 from charsearch_app.models import Character, NPC_Corp, Skill, Thread
+from django.views.decorators.csrf import csrf_exempt
 
 R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
@@ -25,11 +26,12 @@ def skills_json(request):
     return HttpResponse(serialized, content_type='application/json')
 
 
+@csrf_exempt
 def index(request):
     context = {}
     context['threads'] = []
-    if len(request.POST) > 0:
-        filters = getFilters(request.POST)
+    if len(request.GET) > 0:
+        filters = getFilters(request.GET)
     else:
         filters = request.session.get('filters', default=[])
     if filters:
