@@ -6,9 +6,9 @@ from django.utils.timezone import now
 
 class Character(models.Model):
     name = models.CharField(max_length=64, db_index=True)
-    skills = models.ManyToManyField('CharSkill', related_name='learned_by', db_index=True)
-    total_sp = models.BigIntegerField(db_index=True)
-    standings = models.ManyToManyField('Standing', related_name='standing_to', db_index=True)
+    skills = models.ManyToManyField('CharSkill', related_name='learned_by')
+    total_sp = models.BigIntegerField()
+    standings = models.ManyToManyField('Standing', related_name='standing_to')
     last_update = models.DateTimeField(default=now)
     password = models.CharField(max_length=64, blank=True)
     unspent_skillpoints = models.IntegerField(default=0)
@@ -16,7 +16,7 @@ class Character(models.Model):
 
 
 class NPC_Corp(models.Model):
-    name = models.CharField(max_length=256, db_index=True)
+    name = models.CharField(max_length=256)
 
 
 class Standing(models.Model):
@@ -26,7 +26,7 @@ class Standing(models.Model):
 
 class Skill(models.Model):
     name = models.CharField(max_length=64)
-    typeID = models.IntegerField(db_index=True)
+    typeID = models.IntegerField()
     groupID = models.IntegerField()
     groupName = models.CharField(max_length=64)
     description = models.CharField(max_length=256)
@@ -34,16 +34,16 @@ class Skill(models.Model):
 
 
 class CharSkill(models.Model):
-    character = models.ForeignKey(Character)
+    character = models.ForeignKey(Character, db_index=True)
     skill_points = models.IntegerField()
-    level = models.IntegerField(db_index=True)
-    skill = models.ForeignKey(Skill, db_index=True)
+    level = models.IntegerField()
+    skill = models.ForeignKey(Skill)
 
 
 class Thread(models.Model):
     last_update = models.DateTimeField(default=now, db_index=True)
     blacklisted = models.BooleanField()
-    thread_text = models.CharField(max_length=6000, null=True)
+    thread_text = models.CharField(max_length=2000, null=True)
     thread_title = models.CharField(max_length=100)
     thread_id = models.IntegerField()
     character = models.ForeignKey(Character, null=True)
