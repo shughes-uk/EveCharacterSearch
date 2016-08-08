@@ -1,11 +1,13 @@
 import ast
+
 import simplejson
+from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
-from django.core import serializers
-from django.http import HttpResponse
-from charsearch_app.models import Character, Thread, NPC_Corp, Skill
+
+from charsearch_app.models import Character, NPC_Corp, Skill, Thread
 
 R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
@@ -35,7 +37,8 @@ def index(request):
     else:
         results = Character.objects.all()
     if results > 0:
-        threads = Thread.objects.filter(character__in=results).order_by('-last_update')
+        threads = Thread.objects.defer('thread_text').select_related('character').filter(
+            character__in=results).order_by('-last_update')[:500]
         paginator = Paginator(threads, 25)
         page = request.GET.get('page')
         try:
