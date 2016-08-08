@@ -26,6 +26,7 @@ class Command(BaseCommand):
             dest='pages',
             default=1,
             help='The number of pages of the bazaar to scrape')
+        parser.add_argument('--start', action='store', type=int, dest='start', default=0, help='The starting page')
 
     def handle(self, *args, **options):
         verbosity = options.get('verbosity')
@@ -41,7 +42,7 @@ class Command(BaseCommand):
         if verbosity > 2:
             utils_logger.setLevel(logging.DEBUG)
             logger.setLevel(logging.DEBUG)
-        scrape_eveo(options['pages'])
+        scrape_eveo(range(options['start'], options['start'] + options['pages']))
 
 
 R_POSTID = r't=([0-9]+)'
@@ -121,9 +122,9 @@ def scrape_thread(thread):
         return None
 
 
-def scrape_eveo(num_pages):
+def scrape_eveo(page_range):
     threads = []
-    for x in range(1, num_pages + 1):
+    for x in page_range:
         threads.extend(get_bazaar_page(x))
     for thread in threads:
         existing_thread = Thread.objects.filter(thread_id=thread['threadID']).first()
