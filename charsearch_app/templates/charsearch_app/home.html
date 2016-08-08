@@ -505,7 +505,7 @@ ga('send', {
 </h1>
 	<h1 class='center'>Eve Character Search 0.6</h1>
 
-	 <form class='center' name='filters' method='post'>
+	 <form class='center' name='filters' method='post' action='/'>
 	 	{% csrf_token %}
 	 	<div class='center'><button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button></div>
 	 	<input type='submit' onclick='sendSearch()'value='Search'/>
