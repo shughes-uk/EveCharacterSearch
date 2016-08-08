@@ -5,11 +5,9 @@ import urllib
 import urllib2
 
 from BeautifulSoup import BeautifulSoup
-from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
-from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill,
-                                   Standing)
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing)
 
 logger = logging.getLogger("charsearch.utils")
 STUPID_OLDNAMELOOKUP = {
@@ -42,27 +40,14 @@ def buildchar(char_dict):
         char.skills.add(cs)
         char.total_sp += skill[2]
     for standing in char_dict['standings']:
-        try:
-            corp = NPC_Corp.objects.get(name=standing[0])
-        except ObjectDoesNotExist:
+        corp = NPC_Corp.objects.filter(name=standing[0]).first()
+        if corp:
+            char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
+        else:
             corp = NPC_Corp.objects.create(name=standing[0])
             corp.save()
+            char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
             logger.info('Created new npc corp {0}'.format(standing[0]))
-            logger.info('Adding standing to all old characters, set to 0'.format(standing[0]))
-            for char in Character.objects.all():
-                try:
-                    char.standings.get(corp=corp)
-                except:
-                    char.standings.add(Standing.objects.create(corp=corp, value=0))
-                    char.save()
-
-        char.standings.add(Standing.objects.create(corp=corp, value=standing[1]))
-    if char_dict['standings']:
-        for corp in NPC_Corp.objects.all():
-            try:
-                char.standings.get(corp=corp)
-            except ObjectDoesNotExist:
-                char.standings.add(Standing.objects.create(corp=corp, value=0))
     char.last_update = now()
     char.unspent_skillpoints = char_dict['stats']['unallocated_sp']
     char.remaps = char_dict['stats']['remaps']
