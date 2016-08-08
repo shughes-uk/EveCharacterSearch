@@ -1,5 +1,3 @@
-import ast
-
 import simplejson
 from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
@@ -58,54 +56,66 @@ def index(request):
 def getFilters(post):
     filters = {}
     for key in post.keys():
-        try:
-            result = ast.literal_eval(key)
-            if type(result) == tuple:
-                if result[1] in filters:
-                    filters[result[1]][result[0]] = post[key]
-                else:
-                    filters[result[1]] = {result[0]: post[key]}
-        except ValueError, e:
-            if str(e) == 'malformed string':
-                continue
-            else:
-                raise e
-    return filters.values()
+        code = key[:2]
+        filter_number = key[2:]
+        if filter_number not in filters:
+            filters[filter_number] = {}
+        if code == 'ft':
+            filters[filter_number]['filterType'] = post[key]
+        elif code == 'cb':
+            filters[filter_number]['corporation_box'] = post[key]
+        elif code == 'lb':
+            filters[filter_number]['level_box'] = int(post[key])
+        elif code == 'op':
+            filters[filter_number]['operandSelect'] = post[key]
+        elif code == 'sa':
+            filters[filter_number]['standing_amount'] = float(post[key])
+        elif code == 'sc':
+            filters[filter_number]['skill_cat'] = int(post[key])
+        elif code == 'si':
+            filters[filter_number]['sinput'] = post[key]
+        elif code == 'sp':
+            filters[filter_number]['sp_million'] = int(post[key])
+        elif code == 'ti':
+            filters[filter_number]['skill_typeID'] = int(post[key])
+        elif code == 'so':
+            filters[filter_number]['stringOpSelect'] = post[key]
+    return [value for (key, value) in sorted(filters.items())]
 
 
 def applyFilters(filters):
     results = Character.objects.all()
     for f in filters:
         if 'sp_million' in f:
-            skillpoints = int(f['sp_million']) * 1000000
-            if f['operandSelect'] == '==':
+            skillpoints = f['sp_million'] * 1000000
+            if f['operandSelect'] == 'eq':
                 results = results.filter(total_sp__exact=skillpoints)
-            elif f['operandSelect'] == '>=':
+            elif f['operandSelect'] == 'ge':
                 results = results.filter(total_sp__gte=skillpoints)
-            elif f['operandSelect'] == '<=':
+            elif f['operandSelect'] == 'le':
                 results = results.filter(total_sp__lte=skillpoints)
         elif 'skill_typeID' in f:
-            level = int(f['level_box'])
-            typeID = int(f['skill_typeID'])
-            if f['operandSelect'] == '==':
+            level = f['level_box']
+            typeID = f['skill_typeID']
+            if f['operandSelect'] == 'eq':
                 results = results.filter(skills__skill__typeID=typeID, skills__level=level)
-            elif f['operandSelect'] == '>=':
+            elif f['operandSelect'] == 'ge':
                 results = results.filter(skills__skill__typeID=typeID, skills__level__gte=level)
-            elif f['operandSelect'] == '<=':
+            elif f['operandSelect'] == 'le':
                 results = results.filter(skills__skill__typeID=typeID, skills__level__lte=level)
         elif 'corporation_box' in f:
-            req_standing = float(f['standing_amount'])
-            corp = str(f['corporation_box'])
-            if f['operandSelect'] == '==':
+            req_standing = f['standing_amount']
+            corp = f['corporation_box']
+            if f['operandSelect'] == 'eq':
                 results = results.filter(standings__corp__name=corp, standings__value=req_standing)
-            if f['operandSelect'] == '>=':
+            if f['operandSelect'] == 'ge':
                 results = results.filter(standings__corp__name=corp, standings__value__gte=req_standing)
-            if f['operandSelect'] == '<=':
+            if f['operandSelect'] == 'le':
                 results = results.filter(standings__corp__name=corp, standings__value__lte=req_standing)
         elif 'stringOpSelect' in f:
-            name = str(f['sinput'])
-            if f['stringOpSelect'] == 'exact':
+            name = f['sinput']
+            if f['stringOpSelect'] == 'eq':
                 results = results.filter(name__iexact=name.replace(' ', '_'))
-            elif f['stringOpSelect'] == 'contains':
+            elif f['stringOpSelect'] == 'cnt':
                 results = results.filter(name__icontains=name.replace(' ', '_'))
     return results

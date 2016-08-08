@@ -128,7 +128,7 @@
 	}
 	function makeSkillCatBox(fNumber,selectedID){
 		var skillCatSelect = document.createElement('select');
-		skillCatSelect.name = "('skill_cat'," + fNumber + ')';
+		skillCatSelect.name = "sc" + fNumber;
 		skillCatSelect.setAttribute('onChange','onSkillCatChange(this)');
 		var catList = new Array();
 		for (var i = 0; i < skillList.length; i++)
@@ -155,7 +155,7 @@
 	}
 	function makeSPBox(fNumber,selected){
 		var spSelect = document.createElement('select');
-		spSelect.name = "('sp_million'," + fNumber + ')';
+		spSelect.name = "sp" + fNumber;
 		spSelect.setAttribute('filter_number',fNumber)
 		for(var i=1;i<=200;i++)
 		{
@@ -180,7 +180,7 @@
 
 	function makeFilterTypeSelect(selectedType){
 		var filterType = document.createElement('select');
-		filterType.name = 'filterType';
+		filterType.name = 'ft' + counter;
 		filterType.setAttribute('num', counter);
 		filterType.setAttribute('onChange','onFilterTypeChange(this)');
 		var sp = document.createElement('option');
@@ -215,29 +215,29 @@
 	}
 	function makeOperandsBox(fNumber,selectedType){
 		var operandSelect = document.createElement('select');
-		operandSelect.name = "('operandSelect'," + fNumber + ')';
+		operandSelect.name = "op" + fNumber;
 		operandSelect.setAttribute('filter_number',fNumber);
 		var geEq = document.createElement('option');
-		geEq.value = '>=';
+		geEq.value = 'ge';
 		geEq.innerHTML = 'Greater than or equal to';
 		var leEq = document.createElement('option');
-		leEq.value = '<=';
+		leEq.value = 'le';
 		leEq.innerHTML = 'Less than or equal to';
 		var eq = document.createElement('option');
-		eq.value = '==';
+		eq.value = 'eq';
 		eq.innerHTML = 'Exactly';
 		operandSelect.appendChild(geEq);
 		operandSelect.appendChild(leEq);
 		operandSelect.appendChild(eq);
-		if (selectedType =='>=')
+		if (selectedType =='ge')
 		{
 			geEq.selected = true
 		}
-		if (selectedType == '<=')
+		if (selectedType == 'le')
 		{
 			leEq.selected = true
 		}
-		if (selectedType == '==')
+		if (selectedType == 'eq')
 		{
 			eq.selected = true
 		}
@@ -298,22 +298,22 @@
 
 	function makeStringOpBox(fNumber , selectedOp){
 		var operandSelect = document.createElement('select');
-		operandSelect.name = "('stringOpSelect'," + fNumber + ')';
+		operandSelect.name = "so" + fNumber;
 		operandSelect.setAttribute('filter_number',fNumber);
 		var exact = document.createElement('option');
-		exact.value = 'exact';
+		exact.value = 'eq';
 		exact.innerHTML = 'Exactly';
 		var contains = document.createElement('option');
-		contains.value = 'contains';
+		contains.value = 'cnt';
 		contains.innerHTML = 'Contains';
 
 		operandSelect.appendChild(exact);
 		operandSelect.appendChild(contains);
-		if (selectedOp == 'exact')
+		if (selectedOp == 'eq')
 		{
 			exact.selected = true
 		}
-		if (selectedOp == 'contains')
+		if (selectedOp == 'cnt')
 		{
 			contains.selected = true
 		}
@@ -323,7 +323,7 @@
 
 	function makeStringInputBox(fNumber , prefilled_string){
 		var inputBox = document.createElement('input');
-		inputBox.name = "('sinput'," + fNumber + ')';
+		inputBox.name = "si" + fNumber;
 		inputBox.setAttribute('filter_number',fNumber);
 		if (typeof(prefilled_string) != 'undefined'){
 			inputBox.value = prefilled_string
@@ -333,7 +333,7 @@
 
 	function makeCorpNameBox(fNumber  , selectedCorp){
 		var corpBox = document.createElement('select');
-		corpBox.name = "('corporation_box'," + fNumber + ')';
+		corpBox.name = "cb" + fNumber;
 		corpBox.setAttribute('filter_number' , fNumber);
 		for (var i = 0; i < npccorpList.length; i++)
 		{
@@ -362,7 +362,7 @@
 			selected = 0.0
 		}
 		var standingValBox = document.createElement('select');
-		standingValBox.name = "('standing_amount'," + fNumber + ')';
+		standingValBox.name = "sa" + fNumber;
 		standingValBox.setAttribute('filter_number',fNumber);
 		for (var i = -10.0; i <= 10.0;i += 0.1)
 		{
@@ -381,7 +381,7 @@
 
 	function makeSkillBox(fNumber , groupID , selectedID){
 		var skillBox = document.createElement('select');
-		skillBox.name = "('skill_typeID'," + fNumber + ')';
+		skillBox.name = "ti" + fNumber;
 		skillBox.setAttribute('filter_number' , fNumber);
 		for (var i = 0; i < skillList.length; i++)
 		{
@@ -402,7 +402,7 @@
 
 	function makeLevelBox(fNumber , selected){
 		var levelBox = document.createElement('select');
-		levelBox.name = "('level_box'," + fNumber + ')';
+		levelBox.name = "lb" + fNumber;
 		levelBox.setAttribute('filter_number',fNumber);
 
 		var one = document.createElement('option');
