@@ -124,8 +124,9 @@ def parse_skills(skill_soup):
             contents = spans[0].string.strip()
         elif len(spans) == 2:  # skill currently in training have two spans
             contents = spans[0].string.strip()
-        elif len(
-                spans) == 3:  # skill currently in training and also max rank have three spans, not sure how this is possible but it is
+        elif len(spans) == 3:
+            # skill currently in training and also max rank
+            # have three spans, not sure how this is possible but it is
             contents = spans[1].string.strip()
         elif x.string:  # non max rank skills
             contents = x.string.strip()
