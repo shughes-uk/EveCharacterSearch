@@ -8,26 +8,27 @@ $(document).ready(function(){
     });
 }
 );
-$.ajax({
-      type: 'GET',
-      url: "/skills.json",
-      dataType: 'json',
-      success: function(data) { skillList = data;},
-      async: true
-    });
-$.ajax({
-      type: 'GET',
-      url: "/npc_corps.json",
-      dataType: 'json',
-      success: function(data) { npccorpList = data;},
-      async: true
-    });
+
 
 function delself(){
     parentNode.parentNode.removeChild(parentNode)
 }
 
 function start() {
+    $.ajax({
+          type: 'GET',
+          url: "/skills.json",
+          dataType: 'json',
+          success: function(data) { skillList = data;},
+          async: false
+        });
+    $.ajax({
+          type: 'GET',
+          url: "/npc_corps.json",
+          dataType: 'json',
+          success: function(data) { npccorpList = data;},
+          async: false
+        });
     for (var i = 0; i < window.js_filters.length; i++)
     {
         delbutton = makeDelButton()
