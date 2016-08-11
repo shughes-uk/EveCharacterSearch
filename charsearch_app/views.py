@@ -25,6 +25,24 @@ def skills_json(request):
 
 
 @csrf_exempt
+def favourite(request, thread_id):
+    favourites = request.session.get("favourites", [])
+    if thread_id not in favourites:
+        favourites.append(int(thread_id))
+        request.session['favourites'] = favourites
+    return HttpResponse()
+
+
+@csrf_exempt
+def unfavourite(request, thread_id):
+    favourites = request.session.get("favourites", [])
+    if int(thread_id) in favourites:
+        favourites.remove(int(thread_id))
+        request.session['favourites'] = favourites
+    return HttpResponse()
+
+
+@csrf_exempt
 def index(request):
     context = {}
     context['threads'] = []
@@ -37,8 +55,11 @@ def index(request):
     else:
         results = Character.objects.all()
     if results > 0:
+        favourites = request.session.get("favourites", [])
+        context['favourites'] = favourites
         threads = Thread.objects.defer('thread_text').select_related('character').filter(
             character__in=results).order_by('-last_update')[:500]
+        threads = sorted(threads, key=lambda i: i.id in favourites, reverse=True)
         paginator = Paginator(threads, 25)
         page = request.GET.get('page')
         try:

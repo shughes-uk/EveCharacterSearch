@@ -8,7 +8,9 @@
 <script type="text/javascript" src="{% static "charsearch_app/javascript/jquery.tablesorter.js" %}"></script>
 <script>
 	$(document).ready(function(){
-		$("#thread_table").tablesorter({sortList:[[2,1]]});
+		$("#thread_table").tablesorter({
+			sortList:[[0,0],[3,1]]
+		});
 	}
 	);
 	var skillList = []
@@ -29,7 +31,30 @@
 		});
 	var filterList = {{ js_filters|safe }}
 	var counter = 1
+	function favourite(ele,id)
+	{
+		$.ajax({
+		type: 'GET',
+		url: "/favourite/" +id,
+		success: function(data) {
+			ele.src="{% static "charsearch_app/images/favorite-heart-button.png" %}";
+			ele.setAttribute("onclick","unfavourite(this," + id + ")");
+		},
+		async: true});
 
+
+	}
+	function unfavourite(ele,id)
+	{
+		$.ajax({
+		type: 'GET',
+		url: "/unfavourite/" +id,
+		success: function(data) {
+			ele.src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}";
+			ele.setAttribute("onclick","favourite(this," + id + ")");
+		},
+		async: true});
+	}
 	function delself(){
 		parentNode.parentNode.removeChild(parentNode)
 	}
@@ -529,6 +554,7 @@ ga('send', {
 			<table id="thread_table" class='center'>
 				<thead>
 				<tr>
+					<th scope="col">Fav</th>
 					<th scope="col">Thread</th>
 					<th scope="col">Total SP</th>
 					<th scope="col">Last Seen</th>
@@ -538,6 +564,13 @@ ga('send', {
 				<tbody>
 				{% for thread in threads %}
 				    <tr>
+						<td align='center'>
+							{% if thread.id in favourites %}
+							<div style="display:none;">1</div><img onclick="unfavourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-button.png" %}" alt='Favourite'>
+							{% else %}
+							<div style="display:none;">2</div><img onclick="favourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}" alt='Favourite'>
+							{% endif %}
+						</td>
 				    	<td>
 				    		<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
 				    	</td>

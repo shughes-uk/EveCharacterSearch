@@ -4,5 +4,7 @@ from . import views
 
 urlpatterns = [
     url(r'^$', views.index, name='index'), url(r'^npc_corps\.json$', views.npc_corps_json, name='npc_corps'),
-    url(r'^skills\.json$', views.skills_json, name='skills')
+    url(r'^skills\.json$', views.skills_json, name='skills'),
+    url(r'^favourite/(\d*)', views.favourite, name='favourite'),
+    url(r'^unfavourite/(\d*)', views.unfavourite, name='unfavourite')
 ]
