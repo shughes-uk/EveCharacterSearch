@@ -1,502 +1,40 @@
 {% extends "base.html" %}
 {% load humanize %}
 {% load static %}
-{% block title %} Home{% endblock %}
+{% block title %} Home {% endblock %}
 {% block extra_js %}
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" ></script>
-<script type="text/javascript" src="{% static "charsearch_app/javascript/jquery.tablesorter.js" %}"></script>
-<script>
-	$(document).ready(function(){
-		$("#thread_table").tablesorter({
-			sortList:[[0,0],[3,1]]
-		});
-	}
-	);
-	var skillList = []
-	$.ajax({
-		  type: 'GET',
-		  url: "/skills.json",
-		  dataType: 'json',
-		  success: function(data) { skillList = data;},
-		  async: true
-		});
-	var npccorpList = []
-	$.ajax({
-		  type: 'GET',
-		  url: "/npc_corps.json",
-		  dataType: 'json',
-		  success: function(data) { npccorpList = data;},
-		  async: true
-		});
-	var filterList = {{ js_filters|safe }}
-	var counter = 1
+{% if js_filters %}
+    <script type="text/javascript">
+        (function () {window.js_filters = {{ js_filters|safe }};})();
+    </script>
+{% endif %}
+<script type="text/javascript">
 	function favourite(ele,id)
 	{
-		$.ajax({
-		type: 'GET',
-		url: "/favourite/" +id,
-		success: function(data) {
-			ele.src="{% static "charsearch_app/images/favorite-heart-button.png" %}";
-			ele.setAttribute("onclick","unfavourite(this," + id + ")");
-		},
-		async: true});
-
-
+	    $.ajax({
+	    type: 'GET',
+	    url: "/favourite/" +id,
+	    success: function(data) {
+	        ele.src="{% static "charsearch_app/images/favorite-heart-button.png" %}";
+	        ele.setAttribute("onclick","unfavourite(this," + id + ")");
+	    },
+	    async: true});
 	}
 	function unfavourite(ele,id)
 	{
-		$.ajax({
-		type: 'GET',
-		url: "/unfavourite/" +id,
-		success: function(data) {
-			ele.src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}";
-			ele.setAttribute("onclick","favourite(this," + id + ")");
-		},
-		async: true});
+	    $.ajax({
+	    type: 'GET',
+	    url: "/unfavourite/" +id,
+	    success: function(data) {
+	        ele.src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}";
+	        ele.setAttribute("onclick","favourite(this," + id + ")");
+	    },
+	    async: true});
 	}
-	function delself(){
-		parentNode.parentNode.removeChild(parentNode)
-	}
-
-	function start() {
-		for (var i = 0; i < filterList.length; i++)
-		{
-			delbutton = makeDelButton()
-			opBox = makeOperandsBox(counter,filterList[i].operandSelect)
-			var optionsDiv = document.createElement('span')
-			optionsDiv.setAttribute('filter_number',counter)
-			var mainDiv = document.createElement('div')
-			if (filterList[i].sp_million)
-			{
-				filterType = makeFilterTypeSelect('sp')
-				spBox = makeSPBox(counter,filterList[i].sp_million)
-				optionsDiv.appendChild(filterType)
-				optionsDiv.appendChild(opBox)
-				optionsDiv.appendChild(spBox)
-			}
-			else if(filterList[i].level_box)
-			{
-				filterType = makeFilterTypeSelect('skill')
-				catBox = makeSkillCatBox(counter,filterList[i].skill_cat)
-				skillBox = makeSkillBox(counter,filterList[i].skill_cat,filterList[i].skill_typeID)
-				levelBox = makeLevelBox(counter,parseInt(filterList[i].level_box))
-				optionsDiv.appendChild(filterType)
-				optionsDiv.appendChild(catBox)
-				optionsDiv.appendChild(skillBox)
-				optionsDiv.appendChild(opBox)
-				optionsDiv.appendChild(levelBox)
-			}
-			else if(filterList[i].corporation_box)
-			{
-				filterType = makeFilterTypeSelect('standing');
-				corpBox = makeCorpNameBox(counter,filterList[i].corporation_box);
-				standingValBox = makeStandingValBox(counter,parseFloat(filterList[i].standing_amount));
-				optionsDiv.appendChild(filterType);
-				optionsDiv.appendChild(corpBox);
-				optionsDiv.appendChild(opBox);
-				optionsDiv.appendChild(standingValBox);
-			}
-			else if(filterList[i].stringOpSelect)
-			{
-				filterType = makeFilterTypeSelect('cname')
-				opBox = makeStringOpBox(counter,filterList[i].stringOpSelect)
-				nameBox = makeStringInputBox(counter,filterList[i].sinput)
-				optionsDiv.appendChild(filterType)
-				optionsDiv.appendChild(opBox)
-				optionsDiv.appendChild(nameBox)
-			}
-			mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
-			mainDiv.insertBefore(delbutton,mainDiv.firstChild);
-			mainDiv.insertBefore(optionsDiv,mainDiv.firstChild)
-			document.forms.filters.insertBefore(mainDiv,document.forms.filters.lastElementChild);
-			if (counter % 2 == 1)
-			{
-				mainDiv.setAttribute('class','div_odd')
-			}
-			else
-			{
-				mainDiv.setAttribute('class','div_even')
-			}
-			counter++
-		}
-
-	}
-	function addFilter() {
-		delbutton = makeDelButton()
-		filterType = makeFilterTypeSelect('skill')
-		catBox = makeSkillCatBox(counter,'266')
-		opBox = makeOperandsBox(counter)
-		skillBox = makeSkillBox(counter,'266','11584')
-		levelBox = makeLevelBox(counter)
-		var optionsDiv = document.createElement('span')
-		optionsDiv.appendChild(filterType,optionsDiv.firstChild);
-		optionsDiv.appendChild(catBox,optionsDiv.firstChild);
-		optionsDiv.appendChild(skillBox,optionsDiv.firstChild);
-		optionsDiv.appendChild(opBox,optionsDiv.firstChild);
-		optionsDiv.appendChild(levelBox,optionsDiv.firstChild);
-		optionsDiv.setAttribute('filter_number',counter)
-		var div = document.createElement('div');
-		div.insertBefore(document.createElement('br'),div.firstChild);
-		div.insertBefore(delbutton,div.firstChild);
-		div.insertBefore(optionsDiv,div.firstChild)
-		document.forms.filters.insertBefore(div,document.forms.filters.lastElementChild);
-		if (counter % 2 == 1)
-		{
-			div.setAttribute('class','div_odd')
-		}
-		else
-		{
-			div.setAttribute('class','div_even')
-		}
-		counter++;
-	}
-	function makeSkillCatBox(fNumber,selectedID){
-		var skillCatSelect = document.createElement('select');
-		skillCatSelect.name = "sc" + fNumber;
-		skillCatSelect.setAttribute('onChange','onSkillCatChange(this)');
-		var catList = new Array();
-		for (var i = 0; i < skillList.length; i++)
-		{
-			if (catList.indexOf(skillList[i]['fields']['groupName']) != -1)
-			{
-				continue;
-			}
-			else
-			{
-				catList.push(skillList[i]['fields']['groupName']);
-				var catOption = document.createElement('option');
-				catOption.value = skillList[i]['fields']['groupID'];
-				catOption.innerHTML = skillList[i]['fields']['groupName'];
-				skillCatSelect.options.add(catOption);
-				if (selectedID == skillList[i]['fields']['groupID'])
-				{
-					catOption.selected = true;
-
-				}
-			}
-		}
-		return skillCatSelect;
-	}
-	function makeSPBox(fNumber,selected){
-		var spSelect = document.createElement('select');
-		spSelect.name = "sp" + fNumber;
-		spSelect.setAttribute('filter_number',fNumber)
-		for(var i=1;i<=200;i++)
-		{
-			var newOption = document.createElement('option');
-			newOption.value = i;
-			newOption.innerHTML= i +'M';
-		    spSelect.options.add(newOption);
-		    if (i == selected)
-		    {
-		    	newOption.selected = true;
-		    }
-	    }
-	    return spSelect
-	}
-	function makeDelButton(){
-		var delbutton = document.createElement('button');
-		delbutton.setAttribute('onclick','parentNode.parentNode.removeChild(parentNode)');
-		delbutton.innerHTML = 'Remove Filter';
-		delbutton.type = 'button'
-		return delbutton
-	}
-
-	function makeFilterTypeSelect(selectedType){
-		var filterType = document.createElement('select');
-		filterType.name = 'ft' + counter;
-		filterType.setAttribute('num', counter);
-		filterType.setAttribute('onChange','onFilterTypeChange(this)');
-		var sp = document.createElement('option');
-		sp.value = 'sp';
-		sp.innerHTML = 'SP';
-		filterType.appendChild(sp)
-		var skill = document.createElement('option');
-		skill.value = 'skill';
-		skill.innerHTML = 'Skill'
-		filterType.appendChild(skill)
-		if (selectedType == 'skill')
-		{
-			skill.selected = true;
-		}
-		var standing = document.createElement('option');
-		standing.value = 'standing';
-		standing.innerHTML = 'Standing';
-		filterType.appendChild(standing)
-		if (selectedType == 'standing')
-		{
-			standing.selected = true;
-		}
-		var cname = document.createElement('option');
-		cname.value = 'cname';
-		cname.innerHTML = 'Character Name';
-		filterType.appendChild(cname)
-		if (selectedType == 'cname')
-		{
-			cname.selected = true;
-		}
-		return filterType;
-	}
-	function makeOperandsBox(fNumber,selectedType){
-		var operandSelect = document.createElement('select');
-		operandSelect.name = "op" + fNumber;
-		operandSelect.setAttribute('filter_number',fNumber);
-		var geEq = document.createElement('option');
-		geEq.value = 'ge';
-		geEq.innerHTML = 'Greater than or equal to';
-		var leEq = document.createElement('option');
-		leEq.value = 'le';
-		leEq.innerHTML = 'Less than or equal to';
-		var eq = document.createElement('option');
-		eq.value = 'eq';
-		eq.innerHTML = 'Exactly';
-		operandSelect.appendChild(geEq);
-		operandSelect.appendChild(leEq);
-		operandSelect.appendChild(eq);
-		if (selectedType =='ge')
-		{
-			geEq.selected = true
-		}
-		if (selectedType == 'le')
-		{
-			leEq.selected = true
-		}
-		if (selectedType == 'eq')
-		{
-			eq.selected = true
-		}
-		return operandSelect;
-	}
-	function onFilterTypeChange(ele){
-		filterDiv = ele.parentNode;
-		while (filterDiv.firstChild)
-		{
-			if (filterDiv.childNodes.length > 1)
-			{
-				if (filterDiv.firstChild != ele)
-				{
-					filterDiv.removeChild(filterDiv.firstChild)
-				}
-				else
-				{
-					filterDiv.removeChild(filterDiv.lastChild)
-				}
-			}
-			else
-			{
-				break
-			}
-    	}
-    	selectedType = ele.options[ele.selectedIndex].value;
-    	if (selectedType == 'sp')
-    	{
-    		spBox = makeSPBox(filterDiv.getAttribute('filter_number'));
-    		operandBox = makeOperandsBox(filterDiv.getAttribute('filter_number'));
-    		filterDiv.appendChild(operandBox);
-    		filterDiv.appendChild(spBox);
-
-    	}
-    	else if (selectedType == 'skill')
-    	{
-    		skillCatBox = makeSkillCatBox(filterDiv.getAttribute('filter_number'));
-    		filterDiv.appendChild(skillCatBox);
-    		onSkillCatChange(skillCatBox);
-    	}
-    	else if (selectedType == 'standing')
-    	{
-    		corpNameBox = makeCorpNameBox(filterDiv.getAttribute('filter_number'));
-    		standingValBox = makeStandingValBox(filterDiv.getAttribute('filter_number'));
-    		operandBox = makeOperandsBox(filterDiv.getAttribute('filter_number'));
-    		filterDiv.appendChild(corpNameBox);
-    		filterDiv.appendChild(operandBox);
-    		filterDiv.appendChild(standingValBox);
-    	}
-    	else if (selectedType == 'cname')
-    	{
-    		stringOpBox = makeStringOpBox(filterDiv.getAttribute('filter_number'))
-    		stringInput = makeStringInputBox(filterDiv.getAttribute('filter_number'))
-    		filterDiv.appendChild(stringOpBox)
-    		filterDiv.appendChild(stringInput)
-    	}
-	}
-
-	function makeStringOpBox(fNumber , selectedOp){
-		var operandSelect = document.createElement('select');
-		operandSelect.name = "so" + fNumber;
-		operandSelect.setAttribute('filter_number',fNumber);
-		var exact = document.createElement('option');
-		exact.value = 'eq';
-		exact.innerHTML = 'Exactly';
-		var contains = document.createElement('option');
-		contains.value = 'cnt';
-		contains.innerHTML = 'Contains';
-
-		operandSelect.appendChild(exact);
-		operandSelect.appendChild(contains);
-		if (selectedOp == 'eq')
-		{
-			exact.selected = true
-		}
-		if (selectedOp == 'cnt')
-		{
-			contains.selected = true
-		}
-		return operandSelect;
-
-	}
-
-	function makeStringInputBox(fNumber , prefilled_string){
-		var inputBox = document.createElement('input');
-		inputBox.name = "si" + fNumber;
-		inputBox.setAttribute('filter_number',fNumber);
-		if (typeof(prefilled_string) != 'undefined'){
-			inputBox.value = prefilled_string
-		}
-		return inputBox
-	}
-
-	function makeCorpNameBox(fNumber  , selectedCorp){
-		var corpBox = document.createElement('select');
-		corpBox.name = "cb" + fNumber;
-		corpBox.setAttribute('filter_number' , fNumber);
-		for (var i = 0; i < npccorpList.length; i++)
-		{
-			var corpOption = document.createElement('option');
-			corpOption.value = npccorpList[i]['fields']['name'];
-			corpOption.innerHTML = npccorpList[i]['fields']['name'];
-			if (npccorpList[i]['fields']['name'] == '-Security Status-')
-			{
-				corpBox.options.add(corpOption,corpBox.options.firstChild);
-			}
-			else
-			{
-				corpBox.options.add(corpOption);
-			}
-			if (npccorpList[i]['fields']['name'] == selectedCorp)
-			{
-				corpOption.selected  = true;
-			}
-		}
-		return corpBox;
-	}
-
-	function makeStandingValBox(fNumber , selected){
-		if (typeof(selected) == "undefined")
-		{
-			selected = 0.0
-		}
-		var standingValBox = document.createElement('select');
-		standingValBox.name = "sa" + fNumber;
-		standingValBox.setAttribute('filter_number',fNumber);
-		for (var i = -10.0; i <= 10.0;i += 0.1)
-		{
-			i = parseFloat(i.toPrecision(4))
-			var opt = document.createElement('option');
-			opt.value = i;
-			opt.innerHTML = i;
-			standingValBox.appendChild(opt);
-			if (i == selected)
-			{
-				opt.selected = true;
-			}
-		}
-		return standingValBox
-	}
-
-	function makeSkillBox(fNumber , groupID , selectedID){
-		var skillBox = document.createElement('select');
-		skillBox.name = "ti" + fNumber;
-		skillBox.setAttribute('filter_number' , fNumber);
-		for (var i = 0; i < skillList.length; i++)
-		{
-			if (skillList[i]['fields']['groupID'] == groupID)
-			{
-				var skillOption = document.createElement('option');
-				skillOption.value = skillList[i]['fields']['typeID'];
-				skillOption.innerHTML = skillList[i]['fields']['name'];
-				skillBox.options.add(skillOption);
-				if (skillList[i]['fields']['typeID'] == selectedID)
-				{
-					skillOption.selected  = true;
-				}
-			}
-		}
-		return skillBox;
-	}
-
-	function makeLevelBox(fNumber , selected){
-		var levelBox = document.createElement('select');
-		levelBox.name = "lb" + fNumber;
-		levelBox.setAttribute('filter_number',fNumber);
-
-		var one = document.createElement('option');
-		one.value = '1';
-		one.innerHTML = 'I';
-		levelBox.appendChild(one)
-		var two = document.createElement('option');
-		two.value = '2';
-		two.innerHTML = 'II';
-		levelBox.appendChild(two);
-		var three = document.createElement('option');
-		three.value = '3';
-		three.innerHTML = 'III';
-		levelBox.appendChild(three);
-		var four = document.createElement('option');
-		four.value = '4';
-		four.innerHTML = 'IV';
-		levelBox.appendChild(four);
-		var five = document.createElement('option');
-		five.value = '5';
-		five.innerHTML = 'V';
-		levelBox.appendChild(five);
-		switch(selected)
-		{
-			case 1:
-				one.selected = true;
-				break;
-			case 2:
-			  	two.selected = true;
-			  	break;
-			case 3:
-				three.selected = true;
-				break;
-			case 4:
-				four.selected = true;
-				break;
-			case 5:
-				five.selected = true;
-				break;
-			default:
-				break;
-		}
-		return levelBox
-	}
-
-	function onSkillCatChange(ele){
-		var fNumber = ele.parentNode.getAttribute('filter_number');
-		var groupID = ele.options[ele.selectedIndex].value;
-		while (ele.parentNode.lastChild)
-		{
-			if (ele.parentNode.lastChild != ele)
-			{
-				ele.parentNode.removeChild(ele.parentNode.lastChild);
-			}
-			else
-			{
-				break
-			}
-		}
-		ele.parentNode.appendChild(makeSkillBox(fNumber,groupID));
-		ele.parentNode.appendChild(makeOperandsBox(fNumber));
-		ele.parentNode.appendChild(makeLevelBox(fNumber));
-
-	}
-
-
-	window.onload = start
- </script>
-
+</script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js" ></script>
+<script type="text/javascript" src="{% static "charsearch_app/javascript/jquery.tablesorter.js" %}"></script>
+<script stype="text/javascript" src="{% static "charsearch_app/javascript/charsearch.js" %}"></script>
 
 <script>
   (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -527,144 +65,143 @@ ga('send', {
 
  {% endblock %}
 {% block content %}
-</h1>
-	<h1 class='center'>Eve Character Search 0.6</h1>
 
-	 <form class='center' name='filters' method='get' action='/'>
-	 	<div class='center'><button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button></div>
-	 	<input type='submit' onclick='sendSearch()'value='Search'/>
-	 </form>
-	<br>
-	{% if threads %}
-			<div class="center">
-				<span class="step-links">
-					{% if threads.has_previous %}
-						<a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
-					{% endif %}
+    <h1 class='center'>Eve Character Search 0.6</h1>
+     <form class='center' name='filters' method='get' action='/'>
+     	<div class='center'><button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button></div>
+     	<input type='submit' onclick='sendSearch()'value='Search'/>
+     </form>
+    <br>
+    {% if threads %}
+		<div class="center">
+			<span class="step-links">
+				{% if threads.has_previous %}
+					<a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
+				{% endif %}
 
-					<span class="current">
-						Page {{ threads.number }} of {{ threads.paginator.num_pages }}
-					</span>
-
-					{% if threads.has_next %}
-						<a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
-					{% endif %}
+				<span class="current">
+					Page {{ threads.number }} of {{ threads.paginator.num_pages }}
 				</span>
-			</div>
-			<table id="thread_table" class='center'>
-				<thead>
-				<tr>
-					<th scope="col">Fav</th>
-					<th scope="col">Thread</th>
-					<th scope="col">Total SP</th>
-					<th scope="col">Last Seen</th>
-					<th scope="col">Eveboard Link</th>
-				</tr>
-				</thead>
-				<tbody>
-				{% for thread in threads %}
-				    <tr>
-						<td align='center'>
-							{% if thread.id in favourites %}
-							<div style="display:none;">1</div><img onclick="unfavourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-button.png" %}" alt='Favourite'>
-							{% else %}
-							<div style="display:none;">2</div><img onclick="favourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}" alt='Favourite'>
-							{% endif %}
-						</td>
-				    	<td>
-				    		<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
-				    	</td>
-				    	<td>
-				    		{% filter intcomma %}
-				    		{{ thread.character.total_sp}}
-				    		{% endfilter %}
-				    	</td>
-				    	<td>
-				    		{{ thread.last_update|date:"M d, Y h:i A" }}
-				    	</td>
-				    	<td align='center'>
-						    <div class="eveboard_div">
-    							<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);"></a>
-							</div>
-				        </td>
-				    </tr>
-			    {% endfor %}
-			    </tbody>
-		    </table>
-		</br>
-		    <div class="center">
-			    <span class="step-links">
-			        {% if threads.has_previous %}
-			            <a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
-			        {% endif %}
 
-			        <span class="current">
-			            Page {{ threads.number }} of {{ threads.paginator.num_pages }}
-			        </span>
+				{% if threads.has_next %}
+					<a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
+				{% endif %}
+			</span>
+		</div>
+		<table id="thread_table" class='center'>
+			<thead>
+			<tr>
+				<th scope="col">Fav</th>
+				<th scope="col">Thread</th>
+				<th scope="col">Total SP</th>
+				<th scope="col">Last Seen</th>
+				<th scope="col">Eveboard Link</th>
+			</tr>
+			</thead>
+			<tbody>
+			{% for thread in threads %}
+			    <tr>
+					<td align='center'>
+						{% if thread.id in favourites %}
+						<div style="display:none;">1</div><img onclick="unfavourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-button.png" %}" alt='Favourite'>
+						{% else %}
+						<div style="display:none;">2</div><img onclick="favourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}" alt='Favourite'>
+						{% endif %}
+					</td>
+			    	<td>
+			    		<a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
+			    	</td>
+			    	<td>
+			    		{% filter intcomma %}
+			    		{{ thread.character.total_sp}}
+			    		{% endfilter %}
+			    	</td>
+			    	<td>
+			    		{{ thread.last_update|date:"M d, Y h:i A" }}
+			    	</td>
+			    	<td align='center'>
+					    <div class="eveboard_div">
+							<a href="http://eveboard.com/pilot/{{ thread.character.name }}"><img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);"></a>
+						</div>
+			        </td>
+			    </tr>
+		    {% endfor %}
+		    </tbody>
+	    </table>
+	   </br>
+	    <div class="center">
+		    <span class="step-links">
+		        {% if threads.has_previous %}
+		            <a href="?page={{ threads.previous_page_number }}">&#60;&#60;</a>
+		        {% endif %}
 
-			        {% if threads.has_next %}
-			            <a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
-			        {% endif %}
-			    </span>
-			</div>
-	{% else %}
-	<div class='center' style='background-color:#C2C2B2'>
-	No search results, add a filter to get started or adjust your current ones
-	</div>
-	{% endif %}
-	</br>
-	</br>
-	<div class='center'>
-		<h2> Notes </h2>
-		<ul style='text-align:left'>
-		    <li>This app scrapes the eve-o forum character bazaar and builds a database of currently active sales</li>
-		    <li>You add filters then hit search to find the character with the skills you want</li>
-		    <li>At the moment it searchs for the skills you put in or greater than</li>
-		    <li>Check out the project on <a href="https://github.com/shughes-uk/EveCharacterSearch">GitHub</a> if you want to contribute issues or pull requests</li>
-		</ul>
-		<h2>Changelog</h2>
-			<h3>07/08/2016 - 0.6</h3>
-				<ul style='text-align:left'>
-					<li>Fix eveboard link</li>
-					<li>Fixing highlight of first tablerow</li>
-					<li>Pagination arrows at the top of the page</li>
-					<li>'last seen' is now based on the last post in the thread</li>
-					<li>Recording more data internally from eveboard for future updates</li>
-					<li>Large amounts of internal refactoring of code</li>
-					<li>Limit to only 20 pages of results for performance reasons</li>
-				</ul>
-			<h3>03/07/2016 - 0.58</h3>
-				<ul style='text-align:left'>
-					<li>Upgrade to latest Django 1.1</li>
-					<li>Cache skills json rather than using static files</li>
-				</ul>
-			<h3>22/08/2014 - 0.57</h3>
-	    		<ul style='text-align:left'>
-	    			<li>Bugfix for issue reported by <a href=http://www.reddit.com/user/Nimos>Nimos</a> where the scraper would miss skills currently in training</li>
-	    			<li>Fix being unable to search for characters with spaces in their names</li>
-	    		</ul>
-			<h3>15/07/2014 - 0.56</h3>
-	    		<ul style='text-align:left'>
-	    			<li>Added pagination to prevent huge query's that slow my hosting to crawl</li>
-	    			<li>Search by character name to see all the sale threads that character has been involved in!</li>
-	    			<li>No longer purging threads after 60 days, useful with character name search to check character history</li>
-	    		</ul>
-			<h3>19/02/2014 - 0.55</h3>
-	    		<ul style='text-align:left'>
-	    			<li>Scrape 85% of passworded characters!</li>
-	    			<li>Fix bug with scraping default number of pages not working</li>
-	    		</ul>
+		        <span class="current">
+		            Page {{ threads.number }} of {{ threads.paginator.num_pages }}
+		        </span>
 
-			<h3>19/02/2014 - 0.5</h3>
-	    		<ul style='text-align:left'>
-	    			<li>Added filtering by pilot standings!</li>
-	    			<li>Security status is a subcategory of standings</li>
-	    			<li>Issue: Not all eveboard characters have standings listed, these will not show up in a search with a standing filter</li>
-	    			<li>Except security status which is available for all characters</li>
-	    			<li>Scrape multiple pages of character bazaar at once if required</li>
-	    			<li>Fix date sorting on results columns</li>
-	    		</ul>
-			<h3>18/02/2014 - 0.4</h3>
+		        {% if threads.has_next %}
+		            <a href="?page={{ threads.next_page_number }}">&#62;&#62;</a>
+		        {% endif %}
+		    </span>
+		</div>
+    {% else %}
+        <div class='center' style='background-color:#C2C2B2'>
+            No search results, add a filter to get started or adjust your current ones
+        </div>
+    {% endif %}
+    </br>
+    </br>
+    <div class='center'>
+    	<h2> Notes </h2>
+    	<ul style='text-align:left'>
+    	    <li>This app scrapes the eve-o forum character bazaar and builds a database of currently active sales</li>
+    	    <li>You add filters then hit search to find the character with the skills you want</li>
+    	    <li>At the moment it searchs for the skills you put in or greater than</li>
+    	    <li>Check out the project on <a href="https://github.com/shughes-uk/EveCharacterSearch">GitHub</a> if you want to contribute issues or pull requests</li>
+    	</ul>
+    	<h2>Changelog</h2>
+    		<h3>07/08/2016 - 0.6</h3>
+    			<ul style='text-align:left'>
+    				<li>Fix eveboard link</li>
+    				<li>Fixing highlight of first tablerow</li>
+    				<li>Pagination arrows at the top of the page</li>
+    				<li>'last seen' is now based on the last post in the thread</li>
+    				<li>Recording more data internally from eveboard for future updates</li>
+    				<li>Large amounts of internal refactoring of code</li>
+    				<li>Limit to only 20 pages of results for performance reasons</li>
+    			</ul>
+    		<h3>03/07/2016 - 0.58</h3>
+    			<ul style='text-align:left'>
+    				<li>Upgrade to latest Django 1.1</li>
+    				<li>Cache skills json rather than using static files</li>
+    			</ul>
+    		<h3>22/08/2014 - 0.57</h3>
+        		<ul style='text-align:left'>
+        			<li>Bugfix for issue reported by <a href=http://www.reddit.com/user/Nimos>Nimos</a> where the scraper would miss skills currently in training</li>
+        			<li>Fix being unable to search for characters with spaces in their names</li>
+        		</ul>
+    		<h3>15/07/2014 - 0.56</h3>
+        		<ul style='text-align:left'>
+        			<li>Added pagination to prevent huge query's that slow my hosting to crawl</li>
+        			<li>Search by character name to see all the sale threads that character has been involved in!</li>
+        			<li>No longer purging threads after 60 days, useful with character name search to check character history</li>
+        		</ul>
+    		<h3>19/02/2014 - 0.55</h3>
+        		<ul style='text-align:left'>
+        			<li>Scrape 85% of passworded characters!</li>
+        			<li>Fix bug with scraping default number of pages not working</li>
+        		</ul>
+
+    		<h3>19/02/2014 - 0.5</h3>
+        		<ul style='text-align:left'>
+        			<li>Added filtering by pilot standings!</li>
+        			<li>Security status is a subcategory of standings</li>
+        			<li>Issue: Not all eveboard characters have standings listed, these will not show up in a search with a standing filter</li>
+        			<li>Except security status which is available for all characters</li>
+        			<li>Scrape multiple pages of character bazaar at once if required</li>
+        			<li>Fix date sorting on results columns</li>
+        		</ul>
+    		<h3>18/02/2014 - 0.4</h3>
     		<ul style='text-align:left'>
     			<li>Created static json blob for skills that is updated periodically, instead of a DB call every time</li>
     			<li>Sortable tables! Try it!</li>
@@ -674,43 +211,43 @@ ga('send', {
 
         	<h3>15/02/2014 - 0.3</h3>
                 <ul style='text-align:left'>
-	                <li>Upgraded to django 1.6.2</li>
-					<li>Fixed some rubicon caused errors (more characters should parse now)</li>
-					<li>Maybe made things a little faster?</li>
-					<li>You see every character by default now.. for reasons</li>
-					<li>Threads are stored for 28 days now instead of 14 , as an experiment</li>
+                    <li>Upgraded to django 1.6.2</li>
+    				<li>Fixed some rubicon caused errors (more characters should parse now)</li>
+    				<li>Maybe made things a little faster?</li>
+    				<li>You see every character by default now.. for reasons</li>
+    				<li>Threads are stored for 28 days now instead of 14 , as an experiment</li>
                 </ul>
-			<h3>21/01/2014 - 0.251</h3>
-				<ul style='text-align:left'>
-					<li>Added google ads as I am not made of money!</li>
-				</ul>
-			<h3>18/04/2013 - v0.25</h3>
-				<ul style='text-align:left'>
-					<li>Added explantion if there are no search results</li>
-					<li>Reordered the operand box so put 'exactly' as the last option as it doesn't really work for SP totals and was confusing people</li>
-					<li>Bugfix : Remember SP amount selected</li>
-				</ul>
-			<h3>16/04/2013 - v0.2</h3>
-				<ul style='text-align:left'>
-					<li>Now storing your searches via cookies</li>
-					<li>Search by total skillpoints</li>
-					<li>Operands for searching!</li>
-					<li>More javascript changes , filters are created entirely in JS now</li>
-					<li>Total SP table coloumn</li>
-					<li>Probably introduced a bunch of bugs</li>
-				</ul>
-		<h3>18/02/2013 - v0.1</h3>
-			<ul style='text-align:left'>
-				<li>Added 'Last seen' column to indicate when the thread was last seen on the front page</li>
-				<li>Sorted skills roughly as they are sorted ingame</li>
-				<li>Big optimizations for the javascript.. no more 20k autogenerated javascript lines</li>
-				<li>Persist filters so you don't lose your filterset when you press search!</li>
-				<li>Remove filter button</li>
-			</ul>
-		<h3>01/12/2012 - v0.01 </h3>
-			<ul style='text-align:left'>
-				<li>Initial version</li>
-				<li>Css thanks to Canac Falc</li>
-			</ul>
-	</div>
- {% endblock %}
+    		<h3>21/01/2014 - 0.251</h3>
+    			<ul style='text-align:left'>
+    				<li>Added google ads as I am not made of money!</li>
+    			</ul>
+    		<h3>18/04/2013 - v0.25</h3>
+    			<ul style='text-align:left'>
+    				<li>Added explantion if there are no search results</li>
+    				<li>Reordered the operand box so put 'exactly' as the last option as it doesn't really work for SP totals and was confusing people</li>
+    				<li>Bugfix : Remember SP amount selected</li>
+    			</ul>
+    		<h3>16/04/2013 - v0.2</h3>
+    			<ul style='text-align:left'>
+    				<li>Now storing your searches via cookies</li>
+    				<li>Search by total skillpoints</li>
+    				<li>Operands for searching!</li>
+    				<li>More javascript changes , filters are created entirely in JS now</li>
+    				<li>Total SP table coloumn</li>
+    				<li>Probably introduced a bunch of bugs</li>
+    			</ul>
+    	<h3>18/02/2013 - v0.1</h3>
+    		<ul style='text-align:left'>
+    			<li>Added 'Last seen' column to indicate when the thread was last seen on the front page</li>
+    			<li>Sorted skills roughly as they are sorted ingame</li>
+    			<li>Big optimizations for the javascript.. no more 20k autogenerated javascript lines</li>
+    			<li>Persist filters so you don't lose your filterset when you press search!</li>
+    			<li>Remove filter button</li>
+    		</ul>
+    	<h3>01/12/2012 - v0.01 </h3>
+    		<ul style='text-align:left'>
+    			<li>Initial version</li>
+    			<li>Css thanks to Canac Falc</li>
+    		</ul>
+    </div>
+{% endblock %}
