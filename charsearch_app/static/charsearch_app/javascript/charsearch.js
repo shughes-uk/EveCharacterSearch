@@ -1,13 +1,45 @@
 var skillList = []
 var npccorpList = []
 var filter_n = 1
-
+var initialized = false
+var corps_loaded = false
+var skills_loaded = false
 $(document).ready(function(){
     $("#thread_table").tablesorter({
         sortList:[[0,0],[3,1]]
     });
 }
 );
+$.ajax({
+      type: 'GET',
+      url: "/skills.json",
+      dataType: 'json',
+      success: function(data) {
+            skillList = data;
+            if (!initialized  && corps_loaded)
+            {
+                initialized = true
+                start()
+            }
+            skills_loaded = true
+        },
+      async: true
+    });
+$.ajax({
+      type: 'GET',
+      url: "/npc_corps.json",
+      dataType: 'json',
+      success: function(data) {
+          npccorpList = data;
+          if (!initialized  && skills_loaded)
+          {
+              initialized = true
+              start()
+          }
+          corps_loaded = true
+      },
+      async: true
+    });
 
 
 function delself(){
@@ -15,20 +47,7 @@ function delself(){
 }
 
 function start() {
-    $.ajax({
-          type: 'GET',
-          url: "/skills.json",
-          dataType: 'json',
-          success: function(data) { skillList = data;},
-          async: false
-        });
-    $.ajax({
-          type: 'GET',
-          url: "/npc_corps.json",
-          dataType: 'json',
-          success: function(data) { npccorpList = data;},
-          async: false
-        });
+
     for (var i = 0; i < window.js_filters.length; i++)
     {
         delbutton = makeDelButton()
@@ -463,4 +482,4 @@ function onSkillCatChange(ele){
 }
 
 
-window.onload = start
+window.onload = window_onload
