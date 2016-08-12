@@ -58,9 +58,9 @@ def index(request):
         favourites = request.session.get("favourites", [])
         context['favourites'] = favourites
         threads = Thread.objects.defer('thread_text').select_related('character').filter(
-            character__in=results).order_by('-last_update')[:500]
+            character__in=results).order_by('-last_update')
         threads = sorted(threads, key=lambda i: i.id in favourites, reverse=True)
-        paginator = Paginator(threads, 25)
+        paginator = Paginator(threads[:500], 25)
         page = request.GET.get('page')
         try:
             threads = paginator.page(page)
