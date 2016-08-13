@@ -56,11 +56,11 @@ def index(request):
     else:
         q_objects = []
     if q_objects:
-        threads = Thread.objects.select_related('character')
+        threads = Thread.objects.filter(blacklisted=False).select_related('character')
         for q in q_objects:
             threads = threads.filter(q)
     else:
-        threads = Thread.objects.all()
+        threads = Thread.objects.filter(blacklisted=False).select_related('character').all()
     favourites = request.session.get("favourites", [])
     context['favourites'] = favourites
     threads = threads.order_by('-last_update')
