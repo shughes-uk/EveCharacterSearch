@@ -26,7 +26,7 @@ class Standing(models.Model):
 
 class Skill(models.Model):
     name = models.CharField(max_length=64)
-    typeID = models.IntegerField()
+    typeID = models.IntegerField(db_index=True)
     groupID = models.IntegerField()
     groupName = models.CharField(max_length=64)
     description = models.CharField(max_length=256)
@@ -36,8 +36,12 @@ class Skill(models.Model):
 class CharSkill(models.Model):
     character = models.ForeignKey(Character, db_index=True)
     skill_points = models.IntegerField()
-    level = models.IntegerField()
+    level = models.IntegerField(db_index=True)
     skill = models.ForeignKey(Skill)
+    typeID = models.IntegerField(db_index=True, default=1)
+
+    class Meta:
+        index_together = ['typeID', 'level']
 
 
 class Thread(models.Model):

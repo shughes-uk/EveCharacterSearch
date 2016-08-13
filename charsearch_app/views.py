@@ -1,12 +1,13 @@
 import simplejson
 from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
-from charsearch_app.models import Character, NPC_Corp, Skill, Thread
+from charsearch_app.models import CharSkill, NPC_Corp, Skill, Thread
 
 R_LEVEL = r'level([0-9]+)'
 R_FILTER = r'filter([0-9]+)'
@@ -47,34 +48,38 @@ def index(request):
     context = {}
     context['threads'] = []
     if len(request.GET) > 0:
-        filters = getFilters(request.GET)
+        filters = parseFilters(request.GET)
     else:
         filters = []
     if filters:
-        results = applyFilters(filters)
+        q_objects = generateQObjects(filters)
     else:
-        results = Character.objects.all()
-    if results > 0:
-        favourites = request.session.get("favourites", [])
-        context['favourites'] = favourites
-        threads = Thread.objects.defer('thread_text').select_related('character').filter(
-            character__in=results).order_by('-last_update')
-        threads = sorted(threads, key=lambda i: i.id in favourites, reverse=True)
-        paginator = Paginator(threads[:500], 25)
-        page = request.GET.get('page')
-        try:
-            threads = paginator.page(page)
-        except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
-            threads = paginator.page(1)
-        except EmptyPage:
-            threads = paginator.page(paginator.num_pages)
-        context['threads'] = threads
+        q_objects = []
+    if q_objects:
+        threads = Thread.objects.select_related('character')
+        for q in q_objects:
+            threads = threads.filter(q)
+    else:
+        threads = Thread.objects.all()
+    favourites = request.session.get("favourites", [])
+    context['favourites'] = favourites
+    threads = threads.order_by('-last_update')
+    threads = sorted(threads[:500], key=lambda i: i.id in favourites, reverse=True)
+    paginator = Paginator(threads, 25)
+    page = request.GET.get('page')
+    try:
+        threads = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        threads = paginator.page(1)
+    except EmptyPage:
+        threads = paginator.page(paginator.num_pages)
+    context['threads'] = threads
     context['js_filters'] = simplejson.dumps(filters)
     return render(request, 'charsearch_app/home.html', context)
 
 
-def getFilters(post):
+def parseFilters(post):
     filters = {}
     for key in post.keys():
         code = key[:2]
@@ -104,39 +109,40 @@ def getFilters(post):
     return [value for (key, value) in sorted(filters.items())]
 
 
-def applyFilters(filters):
-    results = Character.objects.all()
+def generateQObjects(filters):
+    results = []
     for f in filters:
         if 'sp_million' in f:
             skillpoints = f['sp_million'] * 1000000
             if f['operandSelect'] == 'eq':
-                results = results.filter(total_sp__exact=skillpoints)
+                results.append(Q(character__total_sp__exact=skillpoints))
+                results = results.filter()
             elif f['operandSelect'] == 'ge':
-                results = results.filter(total_sp__gte=skillpoints)
+                results.append(Q(character__total_sp__gte=skillpoints))
             elif f['operandSelect'] == 'le':
-                results = results.filter(total_sp__lte=skillpoints)
+                results.append(Q(character__total_sp__lte=skillpoints))
         elif 'skill_typeID' in f:
             level = f['level_box']
             typeID = f['skill_typeID']
             if f['operandSelect'] == 'eq':
-                results = results.filter(skills__skill__typeID=typeID, skills__level=level)
+                results.append(Q(character__skills__typeID=typeID, character__skills__level=level))
             elif f['operandSelect'] == 'ge':
-                results = results.filter(skills__skill__typeID=typeID, skills__level__gte=level)
+                results.append(Q(character__skills__typeID=typeID, character__skills__level__gte=level))
             elif f['operandSelect'] == 'le':
-                results = results.filter(skills__skill__typeID=typeID, skills__level__lte=level)
+                results.append(Q(character__skills__typeID=typeID, character__skills__level__lte=level))
         elif 'corporation_box' in f:
             req_standing = f['standing_amount']
             corp = f['corporation_box']
             if f['operandSelect'] == 'eq':
-                results = results.filter(standings__corp__name=corp, standings__value=req_standing)
+                results.append(Q(character__standings__corp__name=corp, character__standings__value=req_standing))
             if f['operandSelect'] == 'ge':
-                results = results.filter(standings__corp__name=corp, standings__value__gte=req_standing)
+                results.append(Q(character__standings__corp__name=corp, character__standings__value__gte=req_standing))
             if f['operandSelect'] == 'le':
-                results = results.filter(standings__corp__name=corp, standings__value__lte=req_standing)
+                results.append(Q(character__standings__corp__name=corp, character__standings__value__lte=req_standing))
         elif 'stringOpSelect' in f:
             name = f['sinput']
             if f['stringOpSelect'] == 'eq':
-                results = results.filter(name__iexact=name.replace(' ', '_'))
+                results.append(Q(character_name__iexact=name.replace(' ', '_')))
             elif f['stringOpSelect'] == 'cnt':
-                results = results.filter(name__icontains=name.replace(' ', '_'))
+                results.append(Q(character_name__icontains=name.replace(' ', '_')))
     return results
