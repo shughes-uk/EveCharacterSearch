@@ -75,6 +75,7 @@ class Command(BaseCommand):
                             cs.skill = Skill.objects.filter(name=skill[0])[0]
                         cs.level = skill[1]
                         cs.skill_points = skill[2]
+                        cs.typeID = cs.skill.typeID
                         cs.save()
                         character.skills.add(cs)
                         new_sp_total += skill[2]

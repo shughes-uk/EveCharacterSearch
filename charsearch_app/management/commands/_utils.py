@@ -7,7 +7,8 @@ import urllib2
 from BeautifulSoup import BeautifulSoup
 from django.utils.timezone import now
 
-from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill, Standing)
+from charsearch_app.models import (Character, CharSkill, NPC_Corp, Skill,
+                                   Standing)
 
 logger = logging.getLogger("charsearch.utils")
 STUPID_OLDNAMELOOKUP = {
@@ -35,6 +36,7 @@ def buildchar(char_dict):
             cs.skill = Skill.objects.filter(name=skill[0])[0]
         cs.level = skill[1]
         cs.skill_points = skill[2]
+        cs.typeID = cs.skill.typeID
         cs.save()
         logger.debug("Created CharSkill for {0}".format(skill))
         char.skills.add(cs)
