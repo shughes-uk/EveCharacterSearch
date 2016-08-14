@@ -7,10 +7,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
-from charsearch_app.models import CharSkill, NPC_Corp, Skill, Thread
-
-R_LEVEL = r'level([0-9]+)'
-R_FILTER = r'filter([0-9]+)'
+from charsearch_app.models import NPC_Corp, Skill, Thread
 
 
 @cache_page(60 * 120)
