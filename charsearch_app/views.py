@@ -139,7 +139,7 @@ def generateQObjects(filters):
         elif 'stringOpSelect' in f:
             name = f['sinput']
             if f['stringOpSelect'] == 'eq':
-                results.append(Q(character_name__iexact=name.replace(' ', '_')))
+                results.append(Q(character__name__iexact=name.replace(' ', '_')))
             elif f['stringOpSelect'] == 'cnt':
-                results.append(Q(character_name__icontains=name.replace(' ', '_')))
+                results.append(Q(character__name__icontains=name.replace(' ', '_')))
     return results
