@@ -51,6 +51,7 @@ def grab_skills():
             for skill in skills:
                 if skill.nodeType == 1:
                     skillName = skill.getAttribute('typeName')
+                    published = bool(int(skill.getAttribute('published')))
                     skilltypeID = int(skill.getAttribute('typeID'))
                     existing = Skill.objects.filter(typeID=skilltypeID)
                     if len(existing) > 0:
@@ -60,6 +61,7 @@ def grab_skills():
                         print "New Skill : " + skill.getAttribute('typeName')
                     s.typeID = skilltypeID
                     s.name = skillName
+                    s.published = published
                     # descriptions can be blank
                     description = skill.getElementsByTagName('description')[0]
                     if description.nodeType == 1:

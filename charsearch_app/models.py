@@ -31,6 +31,7 @@ class Skill(models.Model):
     groupName = models.CharField(max_length=64)
     description = models.CharField(max_length=256)
     rank = models.SmallIntegerField()
+    published = models.BooleanField(default=False)
 
 
 class CharSkill(models.Model):

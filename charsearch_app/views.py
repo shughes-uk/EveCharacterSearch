@@ -21,7 +21,7 @@ def npc_corps_json(request):
 
 @cache_page(60 * 120)
 def skills_json(request):
-    serialized = serializers.serialize("json", Skill.objects.all().order_by('groupName', 'name'))
+    serialized = serializers.serialize("json", Skill.objects.filter(published=True).order_by('groupName', 'name'))
     return HttpResponse(serialized, content_type='application/json')
 
 
