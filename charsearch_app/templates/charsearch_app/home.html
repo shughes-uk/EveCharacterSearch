@@ -2,7 +2,9 @@
 {% load humanize %}
 {% load static %}
 {% block title %} Home {% endblock %}
+
 {% block extra_js %}
+<script language="javascript">var CLEAR_BUTTON_URL = "{% static "charsearch_app/images/clear.png" %}";</script>
 {% if js_filters %}
     <script type="text/javascript">
         (function () {window.js_filters = {{ js_filters|safe }};})();

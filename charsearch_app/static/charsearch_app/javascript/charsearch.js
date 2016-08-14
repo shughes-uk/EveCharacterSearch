@@ -184,10 +184,11 @@ function makeSPBox(fNumber,selected){
     return spSelect
 }
 function makeDelButton(){
-    var delbutton = document.createElement('button');
+    var delbutton = document.createElement('img');
     delbutton.setAttribute('onclick','parentNode.parentNode.removeChild(parentNode)');
     delbutton.innerHTML = 'Remove Filter';
-    delbutton.type = 'button'
+    delbutton.src = CLEAR_BUTTON_URL
+    delbutton.className = "clear"
     return delbutton
 }
 

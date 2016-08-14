@@ -32,6 +32,9 @@ select {
     margin: 5px;
     padding: 4px 6px;
 }
+img.clear {
+    vertical-align: middle;
+}
 button, input {
     -moz-border-bottom-colors: none;
     -moz-border-left-colors: none;
