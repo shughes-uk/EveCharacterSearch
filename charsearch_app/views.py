@@ -47,7 +47,7 @@ def index(request):
     if len(request.GET) > 0:
         filters = parseFilters(request.GET)
     else:
-        filters = []
+        filters = None
     if filters:
         q_objects = generateQObjects(filters)
     else:
@@ -79,6 +79,8 @@ def index(request):
 def parseFilters(post):
     filters = {}
     for key in post.keys():
+        if key == 'page':
+            continue
         code = key[:2]
         filter_number = key[2:]
         if filter_number not in filters:
