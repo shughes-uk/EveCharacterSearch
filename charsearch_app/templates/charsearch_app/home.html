@@ -88,15 +88,15 @@
         <div class="center">
             <div class="pagination clearfix">
                 {% if threads.has_previous %}
-                    <a href="?page=1">First</a>
-                    <a href="?page={{ threads.previous_page_number }}">«</a>
-                    <a href="?page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a>
+                    <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
+                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
+                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a>
                 {% endif %}
                 <strong>{{ threads.number }}</strong>
                 {% if threads.has_next %}
-                    <a href="?page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
-                    <a href="?page={{ threads.next_page_number }}">»</a>
-                    <a href="?page={{ threads.paginator.num_pages }}">Last</a>
+                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
+                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
+                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a>
                 {% endif %}
             </div>
         </div>

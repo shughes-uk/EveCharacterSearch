@@ -74,6 +74,9 @@ def index(request):
         threads = paginator.page(paginator.num_pages)
     context['threads'] = threads
     context['js_filters'] = json.dumps(filters)
+    context['get_params'] = request.GET.copy()
+    if 'page' in context['get_params']:
+        del context['get_params']['page']
     return render(request, 'charsearch_app/home.html', context)
 
 
