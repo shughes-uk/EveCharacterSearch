@@ -6,6 +6,54 @@ Eve Character Search is at the front a dynamic webpage that allows searching a l
 
 ECS leverages [Django][django] and [BeautifulSoup][beautifulsoup].
 
+## Getting Started
+
+### OS X
+
+Make sure Xcode Command Line Tools installed and up to date.
+
+```shell
+$ xcode-select --install
+```
+
+Use [Homebrew](https://brew.sh) to install `pyenv` and `virtualwrapper`.
+
+```shell
+$ brew install pyenv-virtualenvwrapper
+```
+
+Use `pyenv` to install a python to use with `virtualwrapper`.
+
+```shell
+$ pyenv install 2.7.12
+$ pyenv global 2.7.12
+```
+
+Configure your shell session for use with `virtualenvwrapper`.
+
+```shell
+$ export PYENV_ROOT=/usr/local/var/pyenv
+$ eval "$(pyenv init -)"
+$ pyenv virtualenvwrapper
+```
+
+Create a new `virtualenv` for `EveCharacterSearch`.
+
+```shell
+mkvirtualenv -r requirements.txt eve
+workon eve
+```
+
+Start a local instance of `EveCharacterSearch`.
+
+```shell
+cp ./evecharsearch/settings_example.py ./evecharsearch/settings.py
+python manage.py makemigrations
+python manage.py migrate
+python manage.py update_api
+python manage.py scrape_threads # use --pages to scrap more than 1 page
+python manage.py runserver
+```
 
 ---
 
