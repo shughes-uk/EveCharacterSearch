@@ -1,0 +1,4 @@
+django == 1.9
+django-debug-toolbar == 1.5
+beautifulsoup == 3.2.1
+python-dateutil == 2.5.3
