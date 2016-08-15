@@ -47,68 +47,69 @@ function delself(){
 }
 
 function start() {
-
-    for (var i = 0; i < window.js_filters.length; i++)
+    if (window.js_filters)
     {
-        delbutton = makeDelButton()
-        opBox = makeOperandsBox(filter_n,window.js_filters[i].operandSelect)
-        var optionsDiv = document.createElement('span')
-        optionsDiv.setAttribute('filter_number',filter_n)
-        var mainDiv = document.createElement('div')
-        if (window.js_filters[i].sp_million)
+        for (var i = 0; i < window.js_filters.length; i++)
         {
-            filterType = makeFilterTypeSelect('sp')
-            spBox = makeSPBox(filter_n,window.js_filters[i].sp_million)
-            optionsDiv.appendChild(filterType)
-            optionsDiv.appendChild(opBox)
-            optionsDiv.appendChild(spBox)
+            delbutton = makeDelButton()
+            opBox = makeOperandsBox(filter_n,window.js_filters[i].operandSelect)
+            var optionsDiv = document.createElement('span')
+            optionsDiv.setAttribute('filter_number',filter_n)
+            var mainDiv = document.createElement('div')
+            if (window.js_filters[i].sp_million)
+            {
+                filterType = makeFilterTypeSelect('sp')
+                spBox = makeSPBox(filter_n,window.js_filters[i].sp_million)
+                optionsDiv.appendChild(filterType)
+                optionsDiv.appendChild(opBox)
+                optionsDiv.appendChild(spBox)
+            }
+            else if(window.js_filters[i].level_box)
+            {
+                filterType = makeFilterTypeSelect('skill')
+                catBox = makeSkillCatBox(filter_n,window.js_filters[i].skill_cat)
+                skillBox = makeSkillBox(filter_n,window.js_filters[i].skill_cat,window.js_filters[i].skill_typeID)
+                levelBox = makeLevelBox(filter_n,parseInt(window.js_filters[i].level_box))
+                optionsDiv.appendChild(filterType)
+                optionsDiv.appendChild(catBox)
+                optionsDiv.appendChild(skillBox)
+                optionsDiv.appendChild(opBox)
+                optionsDiv.appendChild(levelBox)
+            }
+            else if(window.js_filters[i].corporation_box)
+            {
+                filterType = makeFilterTypeSelect('standing');
+                corpBox = makeCorpNameBox(filter_n,window.js_filters[i].corporation_box);
+                standingValBox = makeStandingValBox(filter_n,parseFloat(window.js_filters[i].standing_amount));
+                optionsDiv.appendChild(filterType);
+                optionsDiv.appendChild(corpBox);
+                optionsDiv.appendChild(opBox);
+                optionsDiv.appendChild(standingValBox);
+            }
+            else if(window.js_filters[i].stringOpSelect)
+            {
+                filterType = makeFilterTypeSelect('cname')
+                opBox = makeStringOpBox(filter_n,window.js_filters[i].stringOpSelect)
+                nameBox = makeStringInputBox(filter_n,window.js_filters[i].sinput)
+                optionsDiv.appendChild(filterType)
+                optionsDiv.appendChild(opBox)
+                optionsDiv.appendChild(nameBox)
+            }
+            mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
+            mainDiv.insertBefore(delbutton,mainDiv.firstChild);
+            mainDiv.insertBefore(optionsDiv,mainDiv.firstChild)
+            document.forms.filters.insertBefore(mainDiv,document.forms.filters.lastElementChild);
+            if (filter_n % 2 == 1)
+            {
+                mainDiv.setAttribute('class','div_odd')
+            }
+            else
+            {
+                mainDiv.setAttribute('class','div_even')
+            }
+            filter_n++
         }
-        else if(window.js_filters[i].level_box)
-        {
-            filterType = makeFilterTypeSelect('skill')
-            catBox = makeSkillCatBox(filter_n,window.js_filters[i].skill_cat)
-            skillBox = makeSkillBox(filter_n,window.js_filters[i].skill_cat,window.js_filters[i].skill_typeID)
-            levelBox = makeLevelBox(filter_n,parseInt(window.js_filters[i].level_box))
-            optionsDiv.appendChild(filterType)
-            optionsDiv.appendChild(catBox)
-            optionsDiv.appendChild(skillBox)
-            optionsDiv.appendChild(opBox)
-            optionsDiv.appendChild(levelBox)
-        }
-        else if(window.js_filters[i].corporation_box)
-        {
-            filterType = makeFilterTypeSelect('standing');
-            corpBox = makeCorpNameBox(filter_n,window.js_filters[i].corporation_box);
-            standingValBox = makeStandingValBox(filter_n,parseFloat(window.js_filters[i].standing_amount));
-            optionsDiv.appendChild(filterType);
-            optionsDiv.appendChild(corpBox);
-            optionsDiv.appendChild(opBox);
-            optionsDiv.appendChild(standingValBox);
-        }
-        else if(window.js_filters[i].stringOpSelect)
-        {
-            filterType = makeFilterTypeSelect('cname')
-            opBox = makeStringOpBox(filter_n,window.js_filters[i].stringOpSelect)
-            nameBox = makeStringInputBox(filter_n,window.js_filters[i].sinput)
-            optionsDiv.appendChild(filterType)
-            optionsDiv.appendChild(opBox)
-            optionsDiv.appendChild(nameBox)
-        }
-        mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
-        mainDiv.insertBefore(delbutton,mainDiv.firstChild);
-        mainDiv.insertBefore(optionsDiv,mainDiv.firstChild)
-        document.forms.filters.insertBefore(mainDiv,document.forms.filters.lastElementChild);
-        if (filter_n % 2 == 1)
-        {
-            mainDiv.setAttribute('class','div_odd')
-        }
-        else
-        {
-            mainDiv.setAttribute('class','div_even')
-        }
-        filter_n++
     }
-
 }
 function addFilter() {
     delbutton = makeDelButton()
