@@ -1,4 +1,5 @@
-import simplejson
+import json
+
 from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
@@ -72,7 +73,7 @@ def index(request):
     except EmptyPage:
         threads = paginator.page(paginator.num_pages)
     context['threads'] = threads
-    context['js_filters'] = simplejson.dumps(filters)
+    context['js_filters'] = json.dumps(filters)
     return render(request, 'charsearch_app/home.html', context)
 
 
