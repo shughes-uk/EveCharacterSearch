@@ -1,9 +1,11 @@
 var skillList = []
 var npccorpList = []
+var shipList = []
 var filter_n = 1
 var initialized = false
 var corps_loaded = false
 var skills_loaded = false
+var ships_loaded = false
 $(document).ready(function(){
     $("#thread_table").tablesorter({
         sortList:[[0,0],[3,1]]
@@ -16,7 +18,7 @@ $.ajax({
       dataType: 'json',
       success: function(data) {
             skillList = data;
-            if (!initialized  && corps_loaded)
+            if (!initialized  && corps_loaded && ships_loaded)
             {
                 initialized = true
                 start()
@@ -31,12 +33,27 @@ $.ajax({
       dataType: 'json',
       success: function(data) {
           npccorpList = data;
-          if (!initialized  && skills_loaded)
+          if (!initialized  && skills_loaded && ships_loaded)
           {
               initialized = true
               start()
           }
           corps_loaded = true
+      },
+      async: true
+    });
+$.ajax({
+      type: 'GET',
+      url: "/ships.json",
+      dataType: 'json',
+      success: function(data) {
+          shipList = data;
+          if (!initialized  && skills_loaded && corps_loaded)
+          {
+              initialized = true
+              start()
+          }
+          ships_loaded = true
       },
       async: true
     });
@@ -56,7 +73,7 @@ function start() {
             var optionsDiv = document.createElement('span')
             optionsDiv.setAttribute('filter_number',filter_n)
             var mainDiv = document.createElement('div')
-            if (window.js_filters[i].sp_million)
+            if (window.js_filters[i].filterType == "sp")
             {
                 filterType = makeFilterTypeSelect('sp')
                 spBox = makeSPBox(filter_n,window.js_filters[i].sp_million)
@@ -64,11 +81,11 @@ function start() {
                 optionsDiv.appendChild(opBox)
                 optionsDiv.appendChild(spBox)
             }
-            else if(window.js_filters[i].level_box)
+            else if(window.js_filters[i].filterType == "skill")
             {
                 filterType = makeFilterTypeSelect('skill')
-                catBox = makeSkillCatBox(filter_n,window.js_filters[i].skill_cat)
-                skillBox = makeSkillBox(filter_n,window.js_filters[i].skill_cat,window.js_filters[i].skill_typeID)
+                catBox = makeSkillCatBox(filter_n,window.js_filters[i].groupID)
+                skillBox = makeSkillBox(filter_n,window.js_filters[i].groupID,window.js_filters[i].skill_typeID)
                 levelBox = makeLevelBox(filter_n,parseInt(window.js_filters[i].level_box))
                 optionsDiv.appendChild(filterType)
                 optionsDiv.appendChild(catBox)
@@ -76,7 +93,7 @@ function start() {
                 optionsDiv.appendChild(opBox)
                 optionsDiv.appendChild(levelBox)
             }
-            else if(window.js_filters[i].corporation_box)
+            else if(window.js_filters[i].filterType == "standing")
             {
                 filterType = makeFilterTypeSelect('standing');
                 corpBox = makeCorpNameBox(filter_n,window.js_filters[i].corporation_box);
@@ -86,7 +103,7 @@ function start() {
                 optionsDiv.appendChild(opBox);
                 optionsDiv.appendChild(standingValBox);
             }
-            else if(window.js_filters[i].stringOpSelect)
+            else if(window.js_filters[i].filterType == "cname")
             {
                 filterType = makeFilterTypeSelect('cname')
                 opBox = makeStringOpBox(filter_n,window.js_filters[i].stringOpSelect)
@@ -94,6 +111,15 @@ function start() {
                 optionsDiv.appendChild(filterType)
                 optionsDiv.appendChild(opBox)
                 optionsDiv.appendChild(nameBox)
+            }
+            else if(window.js_filters[i].filterType == "ship")
+            {
+                filterType = makeFilterTypeSelect('ship')
+                catBox = makeShipCatBox(filter_n,window.js_filters[i].groupID)
+                shipBox = makeShipBox(filter_n,window.js_filters[i].groupID,window.js_filters[i].ship_itemID)
+                optionsDiv.appendChild(filterType)
+                optionsDiv.appendChild(catBox)
+                optionsDiv.appendChild(shipBox)
             }
             mainDiv.insertBefore(document.createElement('br'),mainDiv.firstChild);
             mainDiv.insertBefore(delbutton,mainDiv.firstChild);
@@ -142,7 +168,7 @@ function addFilter() {
 }
 function makeSkillCatBox(fNumber,selectedID){
     var skillCatSelect = document.createElement('select');
-    skillCatSelect.name = "sc" + fNumber;
+    skillCatSelect.name = "ci" + fNumber;
     skillCatSelect.setAttribute('onChange','onSkillCatChange(this)');
     var catList = new Array();
     for (var i = 0; i < skillList.length; i++)
@@ -225,6 +251,14 @@ function makeFilterTypeSelect(selectedType){
     if (selectedType == 'cname')
     {
         cname.selected = true;
+    }
+    var ship = document.createElement('option');
+    ship.value = 'ship';
+    ship.innerHTML = 'Ship';
+    filterType.appendChild(ship)
+    if (selectedType == 'ship')
+    {
+        ship.selected = true;
     }
     return filterType;
 }
@@ -309,8 +343,61 @@ function onFilterTypeChange(ele){
         filterDiv.appendChild(stringOpBox)
         filterDiv.appendChild(stringInput)
     }
+    else if (selectedType == 'ship')
+    {
+        shipCatBox = makeShipCatBox(filterDiv.getAttribute('filter_number'))
+        filterDiv.appendChild(shipCatBox)
+        onShipCatChange(shipCatBox)
+    }
 }
+function makeShipBox(fNumber , groupID , selectedID){
+    var shipBox = document.createElement('select');
+    shipBox.name = "sh" + fNumber;
+    shipBox.setAttribute('filter_number' , fNumber);
+    for (var i = 0; i < shipList.length; i++)
+    {
+        if (shipList[i]['fields']['groupID'] == groupID)
+        {
+            var shipOption = document.createElement('option');
+            shipOption.value = shipList[i]['fields']['itemID'];
+            shipOption.innerHTML = shipList[i]['fields']['name'];
+            shipBox.options.add(shipOption);
+            if (shipList[i]['fields']['itemID'] == selectedID)
+            {
+                shipOption.selected  = true;
+            }
+        }
+    }
+    return shipBox;
+}
+function makeShipCatBox(fNumber,selectedID)
+{
+    var shipCatSelect = document.createElement('select');
+    shipCatSelect.name = "ci" + fNumber;
+    shipCatSelect.setAttribute('onChange','onShipCatChange(this)');
+    var catList = new Array();
+    for (var i = 0; i < shipList.length; i++)
+    {
+        if (catList.indexOf(shipList[i]['fields']['groupName']) != -1)
+        {
+            continue;
+        }
+        else
+        {
+            catList.push(shipList[i]['fields']['groupName']);
+            var catOption = document.createElement('option');
+            catOption.value = shipList[i]['fields']['groupID'];
+            catOption.innerHTML = shipList[i]['fields']['groupName'];
+            shipCatSelect.options.add(catOption);
+            if (selectedID == shipList[i]['fields']['groupID'])
+            {
+                catOption.selected = true;
 
+            }
+        }
+    }
+    return shipCatSelect;
+}
 function makeStringOpBox(fNumber , selectedOp){
     var operandSelect = document.createElement('select');
     operandSelect.name = "so" + fNumber;
@@ -480,8 +567,20 @@ function onSkillCatChange(ele){
     ele.parentNode.appendChild(makeSkillBox(fNumber,groupID));
     ele.parentNode.appendChild(makeOperandsBox(fNumber));
     ele.parentNode.appendChild(makeLevelBox(fNumber));
-
 }
-
-
-window.onload = window_onload
+function onShipCatChange(ele){
+    var fNumber = ele.parentNode.getAttribute('filter_number');
+    var groupID = ele.options[ele.selectedIndex].value;
+    while (ele.parentNode.lastChild)
+    {
+        if (ele.parentNode.lastChild != ele)
+        {
+            ele.parentNode.removeChild(ele.parentNode.lastChild);
+        }
+        else
+        {
+            break
+        }
+    }
+    ele.parentNode.appendChild(makeShipBox(fNumber,groupID));
+}

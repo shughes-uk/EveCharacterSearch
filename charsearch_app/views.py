@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
-from charsearch_app.models import NPC_Corp, Skill, Thread
+from charsearch_app.models import NPC_Corp, Ship, Skill, Thread
 
 
 @cache_page(60 * 120)
@@ -20,6 +20,12 @@ def npc_corps_json(request):
 @cache_page(60 * 120)
 def skills_json(request):
     serialized = serializers.serialize("json", Skill.objects.filter(published=True).order_by('groupName', 'name'))
+    return HttpResponse(serialized, content_type='application/json')
+
+
+@cache_page(60 * 120)
+def ships_json(request):
+    serialized = serializers.serialize("json", Ship.objects.order_by('groupName', 'name'))
     return HttpResponse(serialized, content_type='application/json')
 
 
@@ -99,8 +105,8 @@ def parseFilters(post):
             filters[filter_number]['operandSelect'] = post[key]
         elif code == 'sa':
             filters[filter_number]['standing_amount'] = float(post[key])
-        elif code == 'sc':
-            filters[filter_number]['skill_cat'] = int(post[key])
+        elif code == 'ci':
+            filters[filter_number]['groupID'] = int(post[key])
         elif code == 'si':
             filters[filter_number]['sinput'] = post[key]
         elif code == 'sp':
@@ -109,13 +115,16 @@ def parseFilters(post):
             filters[filter_number]['skill_typeID'] = int(post[key])
         elif code == 'so':
             filters[filter_number]['stringOpSelect'] = post[key]
+        elif code == 'sh':
+            filters[filter_number]['ship_itemID'] = post[key]
+
     return [value for (key, value) in sorted(filters.items())]
 
 
 def generateQObjects(filters):
     results = []
     for f in filters:
-        if 'sp_million' in f:
+        if f['filterType'] == "sp":
             skillpoints = f['sp_million'] * 1000000
             if f['operandSelect'] == 'eq':
                 results.append(Q(character__total_sp__exact=skillpoints))
@@ -124,7 +133,7 @@ def generateQObjects(filters):
                 results.append(Q(character__total_sp__gte=skillpoints))
             elif f['operandSelect'] == 'le':
                 results.append(Q(character__total_sp__lte=skillpoints))
-        elif 'skill_typeID' in f:
+        elif f['filterType'] == "skill":
             level = f['level_box']
             typeID = f['skill_typeID']
             if f['operandSelect'] == 'eq':
@@ -133,7 +142,7 @@ def generateQObjects(filters):
                 results.append(Q(character__skills__typeID=typeID, character__skills__level__gte=level))
             elif f['operandSelect'] == 'le':
                 results.append(Q(character__skills__typeID=typeID, character__skills__level__lte=level))
-        elif 'corporation_box' in f:
+        elif f['filterType'] == "standing":
             req_standing = f['standing_amount']
             corp = f['corporation_box']
             if f['operandSelect'] == 'eq':
@@ -142,10 +151,15 @@ def generateQObjects(filters):
                 results.append(Q(character__standings__corp__name=corp, character__standings__value__gte=req_standing))
             if f['operandSelect'] == 'le':
                 results.append(Q(character__standings__corp__name=corp, character__standings__value__lte=req_standing))
-        elif 'stringOpSelect' in f:
+        elif f['filterType'] == "cname":
             name = f['sinput']
             if f['stringOpSelect'] == 'eq':
                 results.append(Q(character__name__iexact=name.replace(' ', '_')))
             elif f['stringOpSelect'] == 'cnt':
                 results.append(Q(character__name__icontains=name.replace(' ', '_')))
+        elif f['filterType'] == 'ship':
+            ship_itemID = f['ship_itemID']
+            ship = Ship.objects.get(itemID=ship_itemID)
+            for rskill in ship.required_skills.all():
+                results.append(Q(character__skills__typeID=rskill.typeID, character__skills__level__gte=rskill.level))
     return results

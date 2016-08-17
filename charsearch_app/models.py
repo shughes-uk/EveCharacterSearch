@@ -58,3 +58,17 @@ class Thread(models.Model):
 class ThreadTitle(models.Model):
     title = models.CharField(max_length=500)
     date = models.DateTimeField(default=now)
+
+
+class RequiredSkill(models.Model):
+    typeID = models.IntegerField(db_index=True)
+    level = models.IntegerField(db_index=True)
+    skill = models.ForeignKey(Skill)
+
+
+class Ship(models.Model):
+    name = models.CharField(max_length=100)
+    required_skills = models.ManyToManyField('RequiredSkill', related_name='required_by')
+    groupID = models.IntegerField(db_index=True)
+    groupName = models.CharField(max_length=100)
+    itemID = models.IntegerField()
