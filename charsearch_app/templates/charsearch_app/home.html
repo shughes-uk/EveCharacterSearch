@@ -1,173 +1,159 @@
-{% extends "base.html" %}
-{% load humanize %}
-{% load static %}
-{% block title %} Home {% endblock %}
-{% block extra_js %}
-    <script language="javascript">
-        var CLEAR_BUTTON_URL = "{% static "charsearch_app/images/clear.png" %}";
-    </script>
-    {% if js_filters|length > 0 %}
-        <script type="text/javascript">
-            window.js_filters = {{ js_filters | safe}};
-        </script>
-    {% endif %}
-    <script type="text/javascript">
-        function favourite(ele, id) {
-            $.ajax({
-                type: 'GET',
-                url: "/favourite/" + id,
-                success: function(data) {
-                    ele.src = "{% static "charsearch_app/images/favorite-heart-button.png" %}";
-                    ele.setAttribute("onclick", "unfavourite(this," + id + ")");
-                },
-                async: true
-            });
-        }
+{% extends "base.html" %} {% load humanize %} {% load static %} {% block title %} Home {% endblock %} {% block extra_js %}
 
-        function unfavourite(ele, id) {
-            $.ajax({
-                type: 'GET',
-                url: "/unfavourite/" + id,
-                success: function(data) {
-                    ele.src = "{% static "charsearch_app/images/favorite-heart-outline-button.png" %}";
-                    ele.setAttribute("onclick", "favourite(this," + id + ")");
-                },
-                async: true
-            });
-        }
-    </script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script type="text/javascript" src="{% static "charsearch_app/javascript/jquery.tablesorter.js" %}"></script>
-
-    <script>
-        (function(i, s, o, g, r, a, m) {
-            i['GoogleAnalyticsObject'] = r;
-            i[r] = i[r] || function() {
-                (i[r].q = i[r].q || []).push(arguments)
-            }, i[r].l = 1 * new Date();
-            a = s.createElement(o),
-                m = s.getElementsByTagName(o)[0];
-            a.async = 1;
-            a.src = g;
-            m.parentNode.insertBefore(a, m)
-        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
-
-        ga('create', 'UA-37043458-1', 'evecharactersearch.com', {
-            'siteSpeedSampleRate': 100
+<script language="javascript">
+    var CLEAR_BUTTON_URL = "{% static 'charsearch_app/images/clear.png' %}";
+</script>
+{% if js_filters|length > 0 %}
+  <script type="text/javascript">
+    window.js_filters = {{js_filters | safe}};
+  </script>
+{% endif %}
+<script type="text/javascript">
+    function favorite(ele, id) {
+        $.ajax({
+            type: 'GET',
+            url: '/favorite/' + id,
+            success: function(data) {
+                ele.src = "{% static 'charsearch_app/images/favorite-heart-button.png' %}";
+                ele.setAttribute('onclick', 'unfavorite(this,' + id + ')');
+            },
+            async: true
         });
-        ga('send', 'pageview');
+    }
 
-        function sendSearch() {
-            ga('send', {
-                'hitType': 'event', // Required.
-                'eventCategory': 'Searchbutton', // Required.
-                'eventAction': 'click',
-            })
-        }
+    function unfavorite(ele, id) {
+        $.ajax({
+            type: 'GET',
+            url: '/unfavorite/' + id,
+            success: function(data) {
+                ele.src = "{% static 'charsearch_app/images/favorite-heart-outline-button.png' %}";
+                ele.setAttribute('onclick', 'favorite(this,' + id + ')');
+            },
+            async: true
+        });
+    }
+</script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+<script type="text/javascript" src="{% static 'charsearch_app/javascript/jquery.tablesorter.js' %}"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script>
+    (function(i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function() {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m);
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
-        function sendAddFilterClick() {
-            ga('send', {
-                'hitType': 'event', // Required.
-                'eventCategory': 'AddFilterbutton', // Required.
-                'eventAction': 'click',
-            })
-        }
-    </script>
-{% endblock %}
-{% block content %}
-    <h1 class='center'>Eve Character Search 0.8</h1>
-    <form class='center' name='filters' method='get' action='/'>
-        <div class='center'>
-            <button type='button' onclick='addFilter();sendAddFilterClick()'>Add Filter</button>
-        </div>
-        <input type='submit' onclick='sendSearch()' value='Search' />
-    </form>
-    <script stype="text/javascript" src="{% static "charsearch_app/javascript/charsearch.js" %}"></script>
-    <br>
-    {% if threads %}
-        <div class="center">
+    ga('create', 'UA-37043458-1', 'evecharactersearch.com', {
+        'siteSpeedSampleRate': 100
+    })
+    ga('send', 'pageview');
+
+    function sendSearch() {
+        ga('send', {
+            'hitType': 'event', // Required.
+            'eventCategory': 'Searchbutton', // Required.
+            'eventAction': 'click',
+        })
+    }
+
+    function sendAddFilterClick() {
+        ga('send', {
+            'hitType': 'event', // Required.
+            'eventCategory': 'AddFilterbutton', // Required.
+            'eventAction': 'click',
+        })
+    }
+</script>
+{% endblock %} {% block content %}
+<div class="center">
+    <div class="ui-panel container">
+        <img src="{% static 'charsearch_app/images/title.png' %}" alt="Eve Character Search" />
+        <form name="filters" method="get" action="/">
+            <button type="button" onclick="addFilter(); sendAddFilterClick();">Add Filter</button>
+            <input type="submit" onclick="sendSearch()" value="Search" />
+        </form>
+        <script stype="text/javascript" src="{% static 'charsearch_app/javascript/charsearch.js' %}"></script>
+        {% if threads %}
+        <div>
             <div class="pagination clearfix">
                 {% if threads.has_previous %}
-                    <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
-                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
-                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a>
-                {% endif %}
-                <strong>{{ threads.number }}</strong>
-                {% if threads.has_next %}
-                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
-                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
-                    <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a>
-                {% endif %}
+                <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
+                <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
+                <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a> {% endif %}
+                <strong>{{ threads.number }}</strong> {% if threads.has_next %}
+                <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
+                <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
+                <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a> {% endif %}
             </div>
         </div>
-        <table id="thread_table" class='center'>
-            <thead>
-                <tr>
-                    <th scope="col">Fav</th>
-                    <th scope="col">Thread</th>
-                    <th scope="col">Total SP</th>
-                    <th scope="col">Last Seen</th>
-                    <th scope="col">Eveboard Link</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for thread in threads %}
-                    <tr>
-                        <td align='center'>
-                            {% if thread.id in favourites %}
-                                <div style="display:none;">1</div>
-                                <img onclick="unfavourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-button.png" %}" alt='Favourite'>
-                            {% else %}
-                                <div style="display:none;">2</div>
-                                <img onclick="favourite(this,{{thread.id}})" src="{% static "charsearch_app/images/favorite-heart-outline-button.png" %}" alt='Favourite'>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a>
-                        </td>
-                        <td>
-                            {% filter intcomma %} {{ thread.character.total_sp}} {% endfilter %}
-                        </td>
-                        <td>
-                            {{ thread.last_update|date:"M d, Y h:i A" }}
-                        </td>
-                        <td align='center'>
-                            <div class="eveboard_div">
-                                <a href="http://eveboard.com/pilot/{{ thread.character.name }}">
-                                    <img src="{% static "charsearch_app/images/eveboard.jpg" %}" alt='Eveboard link' style="transform: scale(1.2, 1.2);">
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </br>
-        <div class="center">
-            <div class="pagination clearfix">
-                {% if threads.has_previous %}
-                    <a href="?page=1">First</a>
-                    <a href="?page={{ threads.previous_page_number }}">«</a>
-                    <a href="?page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a>
-                {% endif %}
-                <strong>{{ threads.number }}</strong>
-                {% if threads.has_next %}
-                    <a href="?page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
-                    <a href="?page={{ threads.next_page_number }}">»</a>
-                    <a href="?page={{ threads.paginator.num_pages }}">Last</a>
-                {% endif %}
-            </div>
-        </div>
-    {% else %}
-        <div class='center' style='background-color:#C2C2B2'>
-            No search results, add a filter to get started or adjust your current ones
-        </div>
-    {% endif %}
-    </br>
-    </br>
-    <div class='center'>
-        <h2> Notes </h2>
-        <ul style='text-align:left'>
+    </div>
+</div>
+
+<table id="thread_table" class="center">
+    <thead>
+        <tr>
+            <th scope="col">Fav</th>
+            <th scope="col">Thread</th>
+            <th scope="col">Total SP</th>
+            <th scope="col">Last Seen</th>
+            <th scope="col">Eveboard Link</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for thread in threads %}
+        <tr>
+            <td align="center">
+                {% if thread.id in favorites %}
+                <div class="hidden">1</div>
+                <img onclick="unfavorite(this,{{thread.id}})" src="{% static 'charsearch_app/images/favorite-heart-button.png' %}" alt="Favorite"> {% else %}
+                <div class="hidden">2</div>
+                <img onclick="favorite(this,{{thread.id}})" src="{% static 'charsearch_app/images/favorite-heart-outline-button.png' %}" alt="Favorite"> {% endif %}
+            </td>
+            <td><a href="https://forums.eveonline.com/default.aspx?g=posts&t={{ thread.thread_id }}&find=unread">{{ thread.thread_title }}</a></td>
+            <td>{% filter intcomma %} {{ thread.character.total_sp}} {% endfilter %}</td>
+            <td>{{ thread.last_update|date:"M d, Y h:i A" }}</td>
+            <td align="center">
+                <div class="eveboard">
+                    <a href="http://eveboard.com/pilot/{{ thread.character.name }}">
+                        <img src="{% static 'charsearch_app/images/eveboard.jpg' %}" alt="Eveboard link">
+                    </a>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="center">
+    <div class="pagination clearfix">
+        {% if threads.has_previous %}
+        <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a> {% endif %}
+        <strong>{{ threads.number }}</strong> {% if threads.has_next %}
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a> {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="center">
+    <div class="mypanel">
+        No search results, add a filter to get started or adjust your current ones
+    </div>
+</div>
+{% endif %}
+
+<div class="center">
+    <div class="mypanel notes">
+        <h2>Notes</h2>
+        <ul>
             <li>This app scrapes the eve-o forum character bazaar and builds a database of currently active sales</li>
             <li>You add filters then hit search to find the character with the skills you want</li>
             <li>At the moment it searchs for the skills you put in or greater than</li>
@@ -175,26 +161,26 @@
         </ul>
         <h2>Changelog</h2>
         <h3>22/08/2016 - 0.8</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Improved pagination widget</li>
             <li>Filter by ships the character is able to fly</li>
             <li>Fix for pagination with filters</li>
         </ul>
         <h3>14/08/2016 - 0.73</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Fix character name searching</li>
             <li>Only list skills that are in the live game</li>
             <li>Large performance fixes</li>
             <li>Some cosmetic tweaks</li>
         </ul>
         <h3>11/08/2016 - 0.7</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Permalinks are here! You can bookmark search results now</li>
-            <li>Favourite results so they stay at the top feature</li>
+            <li>Favorite results so they stay at the top feature</li>
             <li>Some performance tweaks</li>
         </ul>
         <h3>07/08/2016 - 0.6</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Fix eveboard link</li>
             <li>Fixing highlight of first tablerow</li>
             <li>Pagination arrows at the top of the page</li>
@@ -204,29 +190,28 @@
             <li>Limit to only 20 pages of results for performance reasons</li>
         </ul>
         <h3>03/07/2016 - 0.58</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Upgrade to latest Django 1.1</li>
             <li>Cache skills json rather than using static files</li>
         </ul>
         <h3>22/08/2014 - 0.57</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Bugfix for issue reported by <a href=http://www.reddit.com/user/Nimos>Nimos</a> where the scraper would miss skills currently in training</li>
             <li>Fix being unable to search for characters with spaces in their names</li>
         </ul>
         <h3>15/07/2014 - 0.56</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Added pagination to prevent huge query's that slow my hosting to crawl</li>
             <li>Search by character name to see all the sale threads that character has been involved in!</li>
             <li>No longer purging threads after 60 days, useful with character name search to check character history</li>
         </ul>
         <h3>19/02/2014 - 0.55</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Scrape 85% of passworded characters!</li>
             <li>Fix bug with scraping default number of pages not working</li>
         </ul>
-
         <h3>19/02/2014 - 0.5</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Added filtering by pilot standings!</li>
             <li>Security status is a subcategory of standings</li>
             <li>Issue: Not all eveboard characters have standings listed, these will not show up in a search with a standing filter</li>
@@ -235,15 +220,14 @@
             <li>Fix date sorting on results columns</li>
         </ul>
         <h3>18/02/2014 - 0.4</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Created static json blob for skills that is updated periodically, instead of a DB call every time</li>
             <li>Sortable tables! Try it!</li>
             <li>Update skills api,scrape eve,purge threads as seperate operations</li>
             <li>Fixed a minor css error</li>
         </ul>
-
         <h3>15/02/2014 - 0.3</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Upgraded to django 1.6.2</li>
             <li>Fixed some rubicon caused errors (more characters should parse now)</li>
             <li>Maybe made things a little faster?</li>
@@ -251,17 +235,17 @@
             <li>Threads are stored for 28 days now instead of 14 , as an experiment</li>
         </ul>
         <h3>21/01/2014 - 0.251</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Added google ads as I am not made of money!</li>
         </ul>
         <h3>18/04/2013 - v0.25</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Added explantion if there are no search results</li>
             <li>Reordered the operand box so put 'exactly' as the last option as it doesn't really work for SP totals and was confusing people</li>
             <li>Bugfix : Remember SP amount selected</li>
         </ul>
         <h3>16/04/2013 - v0.2</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Now storing your searches via cookies</li>
             <li>Search by total skillpoints</li>
             <li>Operands for searching!</li>
@@ -270,7 +254,7 @@
             <li>Probably introduced a bunch of bugs</li>
         </ul>
         <h3>18/02/2013 - v0.1</h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Added 'Last seen' column to indicate when the thread was last seen on the front page</li>
             <li>Sorted skills roughly as they are sorted ingame</li>
             <li>Big optimizations for the javascript.. no more 20k autogenerated javascript lines</li>
@@ -278,9 +262,10 @@
             <li>Remove filter button</li>
         </ul>
         <h3>01/12/2012 - v0.01 </h3>
-        <ul style='text-align:left'>
+        <ul>
             <li>Initial version</li>
             <li>Css thanks to Canac Falc</li>
         </ul>
     </div>
+</div>
 {% endblock %}

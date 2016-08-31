@@ -2,3 +2,4 @@
 settings.py
 *.json
 charsearch_app/migrations/
+/ecs.db

@@ -1,5 +1,6 @@
 import json
 
+from charsearch_app.models import NPC_Corp, Ship, Skill, Thread
 from django.core import serializers
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
@@ -8,18 +9,17 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
-from charsearch_app.models import NPC_Corp, Ship, Skill, Thread
-
 
 @cache_page(60 * 120)
 def npc_corps_json(request):
-    serialized = serializers.serialize("json", NPC_Corp.objects.all().order_by('name'))
+    serialized = serializers.serialize('json', NPC_Corp.objects.all().order_by('name'))
     return HttpResponse(serialized, content_type='application/json')
 
 
 @cache_page(60 * 120)
 def skills_json(request):
-    serialized = serializers.serialize("json", Skill.objects.filter(published=True).order_by('groupName', 'name'))
+    serialized = serializers.serialize(
+        'json', Skill.objects.filter(published=True).order_by('groupName', 'name'))
     return HttpResponse(serialized, content_type='application/json')
 
 
@@ -30,20 +30,20 @@ def ships_json(request):
 
 
 @csrf_exempt
-def favourite(request, thread_id):
-    favourites = request.session.get("favourites", [])
-    if thread_id not in favourites:
-        favourites.append(int(thread_id))
-        request.session['favourites'] = favourites
+def favorite(request, thread_id):
+    favorites = request.session.get('favorites', [])
+    if thread_id not in favorites:
+        favorites.append(int(thread_id))
+        request.session['favorites'] = favorites
     return HttpResponse()
 
 
 @csrf_exempt
-def unfavourite(request, thread_id):
-    favourites = request.session.get("favourites", [])
-    if int(thread_id) in favourites:
-        favourites.remove(int(thread_id))
-        request.session['favourites'] = favourites
+def unfavorite(request, thread_id):
+    favorites = request.session.get('favorites', [])
+    if int(thread_id) in favorites:
+        favorites.remove(int(thread_id))
+        request.session['favorites'] = favorites
     return HttpResponse()
 
 
@@ -65,10 +65,10 @@ def index(request):
             threads = threads.filter(q)
     else:
         threads = Thread.objects.filter(blacklisted=False).select_related('character').all()
-    favourites = request.session.get("favourites", [])
-    context['favourites'] = favourites
+    favorites = request.session.get('favorites', [])
+    context['favorites'] = favorites
     threads = threads.order_by('-last_update')
-    threads = sorted(threads[:500], key=lambda i: i.id in favourites, reverse=True)
+    threads = sorted(threads[:500], key=lambda i: i.id in favorites, reverse=True)
     paginator = Paginator(threads, 25)
     page = request.GET.get('page')
     try:
@@ -139,18 +139,23 @@ def generateQObjects(filters):
             if f['operandSelect'] == 'eq':
                 results.append(Q(character__skills__typeID=typeID, character__skills__level=level))
             elif f['operandSelect'] == 'ge':
-                results.append(Q(character__skills__typeID=typeID, character__skills__level__gte=level))
+                results.append(Q(character__skills__typeID=typeID,
+                                 character__skills__level__gte=level))
             elif f['operandSelect'] == 'le':
-                results.append(Q(character__skills__typeID=typeID, character__skills__level__lte=level))
+                results.append(Q(character__skills__typeID=typeID,
+                                 character__skills__level__lte=level))
         elif f['filterType'] == "standing":
             req_standing = f['standing_amount']
             corp = f['corporation_box']
             if f['operandSelect'] == 'eq':
-                results.append(Q(character__standings__corp__name=corp, character__standings__value=req_standing))
+                results.append(Q(character__standings__corp__name=corp,
+                                 character__standings__value=req_standing))
             if f['operandSelect'] == 'ge':
-                results.append(Q(character__standings__corp__name=corp, character__standings__value__gte=req_standing))
+                results.append(Q(character__standings__corp__name=corp,
+                                 character__standings__value__gte=req_standing))
             if f['operandSelect'] == 'le':
-                results.append(Q(character__standings__corp__name=corp, character__standings__value__lte=req_standing))
+                results.append(Q(character__standings__corp__name=corp,
+                                 character__standings__value__lte=req_standing))
         elif f['filterType'] == "cname":
             name = f['sinput']
             if f['stringOpSelect'] == 'eq':
@@ -161,5 +166,6 @@ def generateQObjects(filters):
             ship_itemID = f['ship_itemID']
             ship = Ship.objects.get(itemID=ship_itemID)
             for rskill in ship.required_skills.all():
-                results.append(Q(character__skills__typeID=rskill.typeID, character__skills__level__gte=rskill.level))
+                results.append(Q(character__skills__typeID=rskill.typeID,
+                                 character__skills__level__gte=rskill.level))
     return results
