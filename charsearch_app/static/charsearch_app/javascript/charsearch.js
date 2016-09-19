@@ -116,7 +116,7 @@ function start() {
       }
 
       rowDiv.appendChild(makeDelButton())
-      document.forms.filters.insertBefore(rowDiv, document.forms.filters.lastElementChild)
+      document.forms.filters.appendChild(rowDiv)
       filter_n++
     }
   }
@@ -130,7 +130,7 @@ function addFilter() {
   var skillBox = makeSkillBox(filter_n, '266', '11584')
   var levelBox = makeLevelBox(filter_n)
   var rowDiv = document.createElement('div')
-  rowDiv.className = 'row filter'
+  rowDiv.className = 'filter row'
   rowDiv.setAttribute('filter_number', filter_n)
   rowDiv.appendChild(filterType, rowDiv.firstChild)
   rowDiv.appendChild(catBox, rowDiv.firstChild)
@@ -138,7 +138,7 @@ function addFilter() {
   rowDiv.appendChild(opBox, rowDiv.firstChild)
   rowDiv.appendChild(levelBox, rowDiv.firstChild)
   rowDiv.appendChild(delbutton, rowDiv.firstChild)
-  document.forms.filters.insertBefore(rowDiv, document.forms.filters.lastElementChild)
+  document.forms.filters.appendChild(rowDiv)
   filter_n++
 }
 
@@ -343,6 +343,7 @@ function onFilterTypeChange(ele) {
     filterDiv.appendChild(shipCatBox)
     onShipCatChange(shipCatBox)
   }
+  filterDiv.appendChild(makeDelButton())
 }
 
 function makeStringOpBox(fNumber, selectedOp) {

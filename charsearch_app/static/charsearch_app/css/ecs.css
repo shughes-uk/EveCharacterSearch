@@ -109,7 +109,8 @@ table tr:last-child td:last-child {
     border-width: 0 0 0 0;
 }
 table th {
-    background-color: #1d283f;
+
+    background-color: rgb(60, 95, 115);
     border: 0 solid #777777;
     padding: 9px;
     text-align: center;
@@ -233,5 +234,5 @@ table tr:first-child td:last-child {
 .header-image {
     width: 50%;
     height: 50%;
-
+    /*margin-bottom: 20px;*/
 }
