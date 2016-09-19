@@ -196,7 +196,7 @@ function makeDelButton() {
 }
 
 function makeShipBox(fNumber, groupID, selectedID) {
-  var shipBox = document.createElement('select');
+  var shipBox = createSelect();
   shipBox.name = "sh" + fNumber;
   shipBox.setAttribute('filter_number', fNumber);
   for (var i = 0; i < shipList.length; i++) {
@@ -254,7 +254,7 @@ function makeFilterTypeSelect(selectedType) {
 }
 
 function makeShipCatBox(fNumber, selectedID) {
-  var shipCatSelect = document.createElement('select');
+  var shipCatSelect = createSelect();
   shipCatSelect.name = 'ci' + fNumber;
   shipCatSelect.setAttribute('onChange', 'onShipCatChange(this)');
   var catList = new Array();

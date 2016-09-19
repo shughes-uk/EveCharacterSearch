@@ -73,28 +73,28 @@
 {% endblock %} {% block content %}
 <div class="center">
     <div class="ui-panel container">
-        <img src="{% static 'charsearch_app/images/title.png' %}" alt="Eve Character Search" />
+        <img class='header-image' src="{% static 'charsearch_app/images/title.png' %}" alt="Eve Character Search" />
         <form name="filters" method="get" action="/">
-            <button type="button" onclick="addFilter(); sendAddFilterClick();">Add Filter</button>
-            <input type="submit" onclick="sendSearch()" value="Search" />
+            <button class="button" type="button" onclick="addFilter(); sendAddFilterClick();">Add Filter</button>
+            <input class="button" type="submit" onclick="sendSearch()" value="Search" />
         </form>
         <script stype="text/javascript" src="{% static 'charsearch_app/javascript/charsearch.js' %}"></script>
-        {% if threads %}
-        <div>
-            <div class="pagination clearfix">
-                {% if threads.has_previous %}
-                <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
-                <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
-                <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a> {% endif %}
-                <strong>{{ threads.number }}</strong> {% if threads.has_next %}
-                <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
-                <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
-                <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a> {% endif %}
-            </div>
-        </div>
+
     </div>
 </div>
-
+{% if threads %}
+<div class='center'>
+    <div class="pagination clearfix">
+        {% if threads.has_previous %}
+        <a href="?{{get_params.urlencode}}&amp;page=1">First</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">«</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.previous_page_number }}">{{ threads.previous_page_number }}</a> {% endif %}
+        <strong>{{ threads.number }}</strong> {% if threads.has_next %}
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">{{ threads.next_page_number }}</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.next_page_number }}">»</a>
+        <a href="?{{get_params.urlencode}}&amp;page={{ threads.paginator.num_pages }}">Last</a> {% endif %}
+    </div>
+</div>
 <table id="thread_table" class="center">
     <thead>
         <tr>
